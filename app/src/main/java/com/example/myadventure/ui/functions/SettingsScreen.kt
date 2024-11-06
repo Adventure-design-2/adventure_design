@@ -22,6 +22,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
 import com.example.myadventure.ui.profile.UserPreferences
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
@@ -34,13 +35,15 @@ fun SettingsScreen(navController: NavController) {
     val profileImageUri = profileImageUriString?.let { Uri.parse(it) }
 
     Scaffold(
+        containerColor = Color(0xFFF2E4DA),
         topBar = {
-            SettingsTopAppBar(
-                points = points,
-                userName = userName,
-                profileImageUri = profileImageUri,
-                onProfileClick = { navController.navigate("profile_screen") }
+            TopAppBar(
+                title = { Text("설정") },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA))
             )
+        },
+        bottomBar = { // 하단바 추가
+            BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
             Column(

@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -38,11 +39,15 @@ fun HomeScreen(navController: NavController) {
     val points by userPreferences.pointsFlow.collectAsState(initial = userPreferences.getPoints())
 
     Scaffold(
+        containerColor = Color(0xFFF2E4DA),
         topBar = {
             TopAppBar(
-                title = { Text("홈 화면") },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                title = { Text("모아보기") },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA))
             )
+        },
+        bottomBar = { // 하단바 추가
+            BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
             Column(
@@ -69,7 +74,7 @@ fun HomeScreen(navController: NavController) {
                 ) {
                     FeatureCardRow(
                         navController = navController,
-                        firstFeature = Feature("mission_screen", "미션", R.drawable.ic_mission),
+                        firstFeature = Feature("mission_detail/산책하기", "미션", R.drawable.ic_mission),
                         secondFeature = Feature("diary_screen", "다이어리", R.drawable.ic_diary)
                     )
                     Spacer(modifier = Modifier.height(16.dp))

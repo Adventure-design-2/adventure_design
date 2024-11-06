@@ -20,6 +20,9 @@ import com.example.myadventure.R
 import com.example.myadventure.ui.profile.UserPreferences
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+
 
 @Composable
 fun MissionScreen(navController: NavController, currentMission: String? = "") {
@@ -33,6 +36,7 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
     val profileImageUri = profileImageUriString?.let { Uri.parse(it) }
 
     Scaffold(
+        containerColor = Color(0xFFF2E4DA),
         topBar = {
             MissionTopAppBar(
                 points = points,
@@ -40,6 +44,10 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
                 profileImageUri = profileImageUri,
                 onProfileClick = { navController.navigate("profile_screen") }
             )
+        },
+
+        bottomBar = { // 추가된 부분
+            BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
             Column(
@@ -51,16 +59,16 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
                 CurrentMissionCard(currentMission ?: "")
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
-                    navController = navController, // 추가된 navController 전달
-                    missions = listOf("환경 미션 1", "야외 활동 미션 1", "실내 활동 미션 1"),
+                    navController = navController,
+                    missions = listOf("상남자/상여자 되기", "시간여행하기", "실내 활동 미션 1"),
                     missionDetails = mapOf(
-                        "환경 미션 1" to ("공원" to "쓰레기 줍기"),
+                        "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
                         "야외 활동 미션 1" to ("산" to "산책하기"),
                         "실내 활동 미션 1" to ("집" to "정리정돈")
                     ),
                     refreshCount = 3,
                     remainingTime = 300,
-                    onMissionSelected = {}, // 필요한 경우 이 콜백을 정의
+                    onMissionSelected = {},
                     onRefresh = {}
                 )
             }
@@ -77,17 +85,16 @@ fun MissionTopAppBar(
     onProfileClick: () -> Unit
 ) {
     TopAppBar(
-        colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
+        colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA)),
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 프로필 이미지
+                // 프로필 이미지 (URI가 null일 경우 기본 이미지 사용)
                 Image(
-                    painter = profileImageUri?.let { rememberAsyncImagePainter(it) }
-                        ?: painterResource(id = R.drawable.ic_profile),
+                    painter = rememberAsyncImagePainter(profileImageUri ?: R.drawable.ic_profile),
                     contentDescription = "프로필 사진",
                     modifier = Modifier
                         .size(40.dp)
@@ -97,7 +104,7 @@ fun MissionTopAppBar(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // 사용자 이름을 클릭 가능한 텍스트로 표시
+                // 사용자 이름
                 Text(
                     text = userName,
                     style = MaterialTheme.typography.bodyLarge,
@@ -125,15 +132,16 @@ fun CurrentMissionCard(selectedMission: String) {
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { /* 미션 상세 보기 */ },
-        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDEFEF)) // 밝은 배경 색상 적용
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-        ) {
-            Text(text = "현재 미션: $selectedMission", style = MaterialTheme.typography.headlineSmall)
-        }
+        )
+//        {
+//            Text(text = "현재 미션: $selectedMission", style = MaterialTheme.typography.headlineSmall, color = Color(0xFF6D4C41))
+//        }
     }
 }
 
@@ -153,73 +161,133 @@ fun MissionSelectionCard(
 
         // 각 미션을 Card로 감싸서 표시
         missions.forEach { mission ->
-            val (location, instructions) = missionDetails[mission] ?: ("알 수 없음" to "세부 정보가 없습니다.")
             MissionCard(
                 mission = mission,
-                location = location,
-                instructions = instructions,
                 navController = navController,
                 onMissionSelected = onMissionSelected
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // 새로고침 버튼
-        Button(
-            onClick = onRefresh,
-            enabled = refreshCount > 0,
-            modifier = Modifier
-                .size(50.dp)
-                .align(Alignment.CenterHorizontally),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_refresh),
-                contentDescription = "새로고침",
-                tint = Color.White
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        if (refreshCount < 3) {
-            Text(
-                text = "남은 새로고침 횟수: $refreshCount (타이머: ${remainingTime / 60}분 ${remainingTime % 60}초)",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+//        // 새로고침 버튼
+//        Button(
+//            onClick = onRefresh,
+//            enabled = refreshCount > 0,
+//            modifier = Modifier
+//                .size(50.dp)
+//                .align(Alignment.CenterHorizontally),
+//            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+//        ) {
+//            Icon(
+//                painter = painterResource(id = R.drawable.ic_refresh),
+//                contentDescription = "새로고침",
+//                tint = Color.White
+//            )
+//        }
+//        Spacer(modifier = Modifier.height(4.dp))
+//        if (refreshCount < 3) {
+//            Text(
+//                text = "남은 새로고침 횟수: $refreshCount (타이머: ${remainingTime / 60}분 ${remainingTime % 60}초)",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//        }
     }
 }
 
 @Composable
 fun MissionCard(
     mission: String,
-    location: String,
-    instructions: String,
     navController: NavController,
     onMissionSelected: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(80.dp) // 세로 크기를 더 키움
             .clickable {
                 onMissionSelected(mission)
 
-                // 미션 세부 정보 인코딩
+                // 미션 제목만 전달하여 상세 화면으로 이동
                 val encodedMissionTitle = URLEncoder.encode(mission, StandardCharsets.UTF_8.toString())
-                val encodedLocation = URLEncoder.encode(location, StandardCharsets.UTF_8.toString())
-                val encodedInstructions = URLEncoder.encode(instructions, StandardCharsets.UTF_8.toString())
-
-                // 인코딩된 문자열을 경로로 전달하여 상세 화면으로 이동
-                navController.navigate("mission_detail/$encodedMissionTitle/$encodedLocation/$encodedInstructions")
+                navController.navigate("mission_detail/$encodedMissionTitle")
             }
             .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5)) // 예쁜 배경색 적용
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF7E7E7)) // 부드러운 색상
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = mission, style = MaterialTheme.typography.bodyLarge, color = Color.Black)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "위치: $location", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "설명: $instructions", style = MaterialTheme.typography.bodyMedium)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+        ) {
+            Text(
+                text = mission,
+                style = MaterialTheme.typography.headlineMedium, // 더 큰 폰트로 제목을 강조
+                color = Color(0xFF6D4C41)
+            )
         }
     }
 }
+
+@Composable
+fun BottomNavigationBar(navController: NavController) {
+    var selectedItem by remember { mutableStateOf("home") }
+
+    NavigationBar(
+        containerColor = Color(0xFFEAD9C9) // 배경 색상 설정
+    ) {
+        NavigationBarItem(
+            icon = { Icon(painterResource(id = R.drawable.ic_home), contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = selectedItem == "home",
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFFFFC0CB), // 선택된 아이템의 색상
+                unselectedIconColor = Color.Black
+            ),
+            onClick = {
+                selectedItem = "home"
+                navController.navigate("mission_screen") // 'home' 클릭 시 'mission_screen'으로 이동
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(painterResource(id = R.drawable.ic_garden), contentDescription = "Garden") },
+            label = { Text("Garden") },
+            selected = selectedItem == "garden",
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFFFFC0CB),
+                unselectedIconColor = Color.Black
+            ),
+            onClick = {
+                selectedItem = "garden"
+                navController.navigate("garden_screen")
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(painterResource(id = R.drawable.ic_shop), contentDescription = "Shop") },
+            label = { Text("Shop") },
+            selected = selectedItem == "shop",
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFFFFC0CB),
+                unselectedIconColor = Color.Black
+            ),
+            onClick = {
+                selectedItem = "shop"
+                navController.navigate("shop_screen")
+            }
+        )
+        NavigationBarItem(
+            icon = { Icon(painterResource(id = R.drawable.ic_other), contentDescription = "Other") },
+            label = { Text("Other") },
+            selected = selectedItem == "other",
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFFFFC0CB),
+                unselectedIconColor = Color.Black
+            ),
+            onClick = {
+                selectedItem = "other"
+                navController.navigate("home_screen") // 'other' 클릭 시 'home_screen'으로 이동
+            }
+        )
+    }
+}
+

@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.ui.functions.*
 import com.example.myadventure.ui.profile.ProfileComposable
 import com.example.myadventure.ui.theme.MyAdventureTheme
+//import com.example.myadventure.ui.auth.SignUpScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,18 +31,32 @@ class MainActivity : ComponentActivity() {
                     composable("profile_screen") {
                         ProfileComposable(navController = navController)
                     }
+                    composable("settings_screen") {
+                        SettingsScreen(navController = navController) // 설정 화면 추가
+                    }
+                    composable("map_screen") {
+                        MapScreen() // 지도 화면 추가
+                    }
+                    composable("shop_screen") {
+                        ShopScreen(navController = navController) // 설정 화면 추가
+                    }
+                    composable("signup_screen") {
+                        SignUpScreen(navController = navController)// 설정 화면 추가
+                    }
+                    composable("garden_screen") {
+                        GardenScreen(navController = navController)// 설정 화면 추가
+                    }
+                    composable("verification_screen") {
+                        VerificationScreen(navController = navController)// 설정 화면 추가
+                    }
                     composable(
-                        route = "mission_detail/{missionTitle}/{location}/{instructions}",
+                        route = "mission_detail/{missionTitle}",
                         arguments = listOf(
-                            navArgument("missionTitle") { defaultValue = "" },
-                            navArgument("location") { defaultValue = "" },
-                            navArgument("instructions") { defaultValue = "" }
+                            navArgument("missionTitle") { defaultValue = "" }
                         )
                     ) { backStackEntry ->
                         val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
-                        val location = backStackEntry.arguments?.getString("location") ?: ""
-                        val instructions = backStackEntry.arguments?.getString("instructions") ?: ""
-                        MissionDetailScreen(missionTitle, location, instructions)
+                        MissionDetailScreen(navController = navController,missionTitle = missionTitle)
                     }
                 }
             }

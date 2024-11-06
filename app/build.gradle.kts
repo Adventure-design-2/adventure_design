@@ -66,7 +66,9 @@
         implementation(libs.androidx.datastore.preferences)
         implementation(libs.coil.compose)
         implementation(libs.accompanist.permissions)
-
+        // AndroidSVG 라이브러리 추가
+        implementation("com.caverock:androidsvg:1.4")
+        implementation("com.caverock:androidsvg:1.4")
         // Test dependencies
         testImplementation(libs.junit)
         androidTestImplementation(libs.androidx.junit)

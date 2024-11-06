@@ -18,9 +18,11 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
 import com.example.myadventure.ui.profile.UserPreferences
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
-fun MissionScreen(navController: NavController,  currentMission: String? = "") {
+fun MissionScreen(navController: NavController, currentMission: String? = "") {
     val context = LocalContext.current
     val userPreferences = UserPreferences.getInstance(context)
 
@@ -49,10 +51,16 @@ fun MissionScreen(navController: NavController,  currentMission: String? = "") {
                 CurrentMissionCard(currentMission ?: "")
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
+                    navController = navController, // 추가된 navController 전달
                     missions = listOf("환경 미션 1", "야외 활동 미션 1", "실내 활동 미션 1"),
+                    missionDetails = mapOf(
+                        "환경 미션 1" to ("공원" to "쓰레기 줍기"),
+                        "야외 활동 미션 1" to ("산" to "산책하기"),
+                        "실내 활동 미션 1" to ("집" to "정리정돈")
+                    ),
                     refreshCount = 3,
                     remainingTime = 300,
-                    onMissionSelected = {},
+                    onMissionSelected = {}, // 필요한 경우 이 콜백을 정의
                     onRefresh = {}
                 )
             }
@@ -131,53 +139,87 @@ fun CurrentMissionCard(selectedMission: String) {
 
 @Composable
 fun MissionSelectionCard(
+    navController: NavController,
     missions: List<String>,
+    missionDetails: Map<String, Pair<String, String>>, // 미션별 위치와 설명 정보
     refreshCount: Int,
     remainingTime: Int,
     onMissionSelected: (String) -> Unit,
     onRefresh: () -> Unit
 ) {
+    Column(modifier = Modifier.padding(8.dp)) {
+        Text(text = "미션 고르기", style = MaterialTheme.typography.headlineSmall)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 각 미션을 Card로 감싸서 표시
+        missions.forEach { mission ->
+            val (location, instructions) = missionDetails[mission] ?: ("알 수 없음" to "세부 정보가 없습니다.")
+            MissionCard(
+                mission = mission,
+                location = location,
+                instructions = instructions,
+                navController = navController,
+                onMissionSelected = onMissionSelected
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // 새로고침 버튼
+        Button(
+            onClick = onRefresh,
+            enabled = refreshCount > 0,
+            modifier = Modifier
+                .size(50.dp)
+                .align(Alignment.CenterHorizontally),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_refresh),
+                contentDescription = "새로고침",
+                tint = Color.White
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        if (refreshCount < 3) {
+            Text(
+                text = "남은 새로고침 횟수: $refreshCount (타이머: ${remainingTime / 60}분 ${remainingTime % 60}초)",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+fun MissionCard(
+    mission: String,
+    location: String,
+    instructions: String,
+    navController: NavController,
+    onMissionSelected: (String) -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+            .clickable {
+                onMissionSelected(mission)
+
+                // 미션 세부 정보 인코딩
+                val encodedMissionTitle = URLEncoder.encode(mission, StandardCharsets.UTF_8.toString())
+                val encodedLocation = URLEncoder.encode(location, StandardCharsets.UTF_8.toString())
+                val encodedInstructions = URLEncoder.encode(instructions, StandardCharsets.UTF_8.toString())
+
+                // 인코딩된 문자열을 경로로 전달하여 상세 화면으로 이동
+                navController.navigate("mission_detail/$encodedMissionTitle/$encodedLocation/$encodedInstructions")
+            }
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5)) // 예쁜 배경색 적용
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "미션 고르기", style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(16.dp))
-            missions.forEach { mission ->
-                Button(
-                    onClick = { onMissionSelected(mission) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text(text = mission)
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = onRefresh,
-                enabled = refreshCount > 0,
-                modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_refresh),
-                    contentDescription = "새로고침",
-                    tint = Color.White
-                )
-            }
+            Text(text = mission, style = MaterialTheme.typography.bodyLarge, color = Color.Black)
             Spacer(modifier = Modifier.height(4.dp))
-            if (refreshCount < 3) {
-                Text(
-                    text = "남은 새로고침 횟수: $refreshCount (타이머: ${remainingTime / 60}분 ${remainingTime % 60}초)",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            Text(text = "위치: $location", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "설명: $instructions", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

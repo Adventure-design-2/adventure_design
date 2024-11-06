@@ -78,8 +78,27 @@ fun HomeScreen(navController: NavController) {
                         firstFeature = Feature("garden_screen", "정원", R.drawable.ic_garden),
                         secondFeature = Feature("map_screen", "지도", R.drawable.ic_map)
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(100.dp)
+                            .offset(x = 16.dp, y = (-16).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FeatureCard(
+                            navController = navController,
+                            route = "settings_screen",
+                            text = "설정",
+                            backgroundRes = R.drawable.ic_settings_24
+
+                        )
+                    }
+
                 }
-            }
+                }
+
+
         }
     )
 }

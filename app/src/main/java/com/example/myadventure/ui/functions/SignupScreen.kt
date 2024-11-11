@@ -35,7 +35,7 @@ fun SignUpScreen(navController: NavController) {
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.ic_diary),
+            painter = painterResource(id = R.drawable.background123),
             contentDescription = "Logo",
             modifier = Modifier.size(100.dp)
         )

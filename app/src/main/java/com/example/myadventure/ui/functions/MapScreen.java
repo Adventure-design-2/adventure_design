@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions;
+package com.example.myadventure.ui.screen;
 
 public class MapScreen {
 }

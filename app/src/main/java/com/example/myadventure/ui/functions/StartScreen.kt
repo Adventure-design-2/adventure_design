@@ -14,7 +14,7 @@ import kotlinx.coroutines.delay
 fun StartScreen(navController: NavController) {
     // 화면이 표시될 때 2초 후에 자동으로 이동하는 LaunchedEffect 설정
     LaunchedEffect(Unit) {
-        delay(2000) // 2초 딜레이
+//        delay(100) // 2초 딜레이
         navController.navigate("signup_screen") {
             popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
         }
@@ -32,7 +32,7 @@ fun StartScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "My Adventure에 오신 것을 환영합니다!",
+                    text = "!!!",
                     style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))

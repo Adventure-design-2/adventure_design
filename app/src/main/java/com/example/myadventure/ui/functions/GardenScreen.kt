@@ -129,7 +129,7 @@ fun GardenScreen(navController: NavController) {
                     },
                     dismissButton = {
                         TextButton(onClick = { showCapsuleDialog = false }) {
-                            Text("아니오")
+                            Text("아니dy")
                         }
                     }
                 )

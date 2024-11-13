@@ -34,9 +34,9 @@ class MainActivity : ComponentActivity() {
                     composable("settings_screen") {
                         SettingsScreen(navController = navController) // 설정 화면 추가
                     }
-                    composable("map_screen") {
-                        MapScreen() // 지도 화면 추가
-                    }
+//                    composable("map_screen") {
+//                        MapScreen() // 지도 화면 추가
+//                    }
                     composable("shop_screen") {
                         ShopScreen(navController = navController) // 설정 화면 추가
                     }
@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
                         val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
                         MissionDetailScreen(navController = navController,missionTitle = missionTitle)
                     }
+
                 }
             }
         }

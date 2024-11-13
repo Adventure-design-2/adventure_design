@@ -16,98 +16,78 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.myadventure.Mission
+import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
-import com.example.myadventure.backend.data.Mission
-import com.example.myadventure.backend.data.requestMissionCreation
-import kotlinx.coroutines.launch
+import com.example.myadventure.UiState
+import kotlinx.serialization.Serializable
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalMaterial3Api
 @Composable
-fun MissionScreen(navController: NavHostController) {
-    var mission by remember { mutableStateOf<Mission?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+fun MissionScreen(
+    navController: NavHostController,
+    viewModel: MissionViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 화면이 처음 로드될 때 백엔드에 미션 생성 요청을 보냄
+    // 화면이 처음 로드될 때 미리 정의된 프롬프트로 미션을 생성하도록 함
     LaunchedEffect(Unit) {
-        mission = requestMissionCreation() // 미션 생성 요청
+        viewModel.createMissions() // 자동으로 미션 생성 요청
     }
 
-    Scaffold(
-        topBar = {
-            MissionTopAppBar(
-                navController = navController,
-                points = 100, // 예시 포인트 값, 실제 데이터로 변경 가능
-                userName = "User Name", // 예시 사용자 이름, 실제 데이터로 변경 가능
-                profileImageUri = null // 프로필 이미지 URI를 실제 값으로 변경 가능
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (mission != null) {
-                    Text("미션 제목: ${mission!!.title}", style = MaterialTheme.typography.headlineMedium)
-                    Text("장소: ${mission!!.location}", style = MaterialTheme.typography.bodyMedium)
-                    Text("설명: ${mission!!.description}", style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    Text("미션을 생성하려면 버튼을 누르세요.", style = MaterialTheme.typography.bodyMedium)
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // 상태에 따라 UI 표시
+        when (uiState) {
+            is UiState.Initial -> {
+                Text("미션을 생성 중입니다...")
+            }
+            is UiState.Loading -> {
+                CircularProgressIndicator()
+            }
+            is UiState.Success -> {
+                val missions = (uiState as UiState.Success).missionContents
 
-                Spacer(modifier = Modifier.height(16.dp))
+                // 미션을 카드로 표시
+                missions.take(3).forEach { mission ->
+                    MissionCard(
+                        mission = mission,
+                        navController = navController,
+                        onMissionSelected = {
+                            // 미션 카드 클릭 시 추가 동작
+                        }
+                    )
 
-                Button(onClick = {
-                    coroutineScope.launch {
-                        // 버튼 클릭 시에도 미션 생성 요청 가능
-                        mission = requestMissionCreation()
-                    }
-                }) {
-                    Text("미션 생성 요청")
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
-        }
-    )
-}
-
-@Composable
-fun MissionSelectionCard(
-    navController: NavController,
-    missions: List<Mission>,
-    onMissionSelected: (Mission) -> Unit,
-    onRefresh: () -> Unit
-) {
-    Column(modifier = Modifier.padding(8.dp)) {
-        Text(text = "미션 고르기", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Display each mission
-        missions.forEach { mission ->
-            MissionCard(
-                mission = mission,
-                navController = navController,
-                onMissionSelected = { onMissionSelected(mission) }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Refresh button to regenerate missions
-        Button(
-            onClick = onRefresh,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("새로고침")
+            is UiState.Error -> {
+                Text("오류: ${(uiState as UiState.Error).message}")
+                Button(onClick = {
+                    viewModel.createMissions() // 오류 시에도 미리 준비된 프롬프트로 다시 시도
+                }) {
+                    Text("다시 시도")
+                }
+            }
+            else -> {}
         }
     }
 }
+
+@Serializable
+data class Mission(
+    val title: String,
+    val location: String,
+    val description: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,12 +116,11 @@ fun MissionTopAppBar(
                             navController.navigate("profile_screen")
                         }
                 )
-
                 Spacer(modifier = Modifier.width(16.dp))
 
                 // 유저 정보 표시
                 UserInfo(userName = userName, points = points) {
-                    navController.navigate("profile_screen") // 프로필 텍스트 클릭 시에도 유저 정보 화면으로 이동
+                    navController.navigate("profile_screen")
                 }
             }
         }

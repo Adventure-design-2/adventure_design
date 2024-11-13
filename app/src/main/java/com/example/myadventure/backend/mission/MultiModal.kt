@@ -13,7 +13,7 @@ import java.io.IOException
 fun multimodal(): List<String> {
     val responses = mutableListOf<String>()
     try {
-        VertexAI("gen-lang-client-0976176955", "us-central1").use { vertexAi ->
+        VertexAI("gen-lang-client-0976176955", "asia-northeast3").use { vertexAi ->
             val generationConfig = GenerationConfig.newBuilder()
                 .setMaxOutputTokens(8192)
                 .setTemperature(1F)

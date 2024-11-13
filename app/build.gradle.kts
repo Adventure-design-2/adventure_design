@@ -1,5 +1,5 @@
 @file:Suppress("DEPRECATION")
-
+import java.util.Properties
 
 
 plugins {
@@ -23,8 +23,21 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { stream ->
+                localProperties.load(stream)
+            }
+        }
+        val apiKey: String = localProperties.getProperty("API_KEY") ?: ""
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        val projectID : String = localProperties.getProperty("Project_ID") ?: ""
+        buildConfigField("String", "Project_ID","\"$projectID\"")
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false

@@ -1,6 +1,7 @@
 package com.example.myadventure.ui.functions
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,20 +26,33 @@ fun ShopScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val items = listOf(
-        ShopItem("정소연", R.drawable.ic_diary, 10),
-        ShopItem("Yoga Mat", R.drawable.ic_diary, 15),
-        ShopItem("Energy Pill", R.drawable.ic_diary, 5),
-        ShopItem("Timer", R.drawable.ic_diary, 20),
-        ShopItem("Capsule", R.drawable.ic_diary, 8)
+    val capsuleItems = listOf(
+        ShopItem("해캡이", R.drawable.ic_sun, 500),
+        ShopItem("반토리", R.drawable.ic_groundhog, 300),
+        ShopItem("분또기", R.drawable.ic_snail, 200),
+        ShopItem("달도치", R.drawable.ic_hedgehog, 100),
+        ShopItem("캡슈리", R.drawable.ic_pill, 30)
     )
+    val stickerItems = listOf(
+        ShopItem("하트", R.drawable.ic_heart, 10),
+        ShopItem("곰돌이 인형", R.drawable.ic_teddybear, 10),
+        ShopItem("사과", R.drawable.ic_apple2, 10),
+        ShopItem("?", R.drawable.ic_question, 10),
+        ShopItem("곰돌이 인형", R.drawable.ic_teddybear, 10),
+        ShopItem("사과", R.drawable.ic_apple2, 10)
+    )
+
+    val items = when (selectedTab) {
+        "캡슐" -> capsuleItems
+        "스티커" -> stickerItems
+        else -> capsuleItems
+    }
 
     Scaffold(
         containerColor = Color(0xFFF2E4DA),
-
         topBar = {
             TopAppBar(
-                title = { Text("상점") },
+                title = { Text("SHOP") },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA)),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -54,10 +68,10 @@ fun ShopScreen(navController: NavController) {
                 }
             )
         },
-        bottomBar = { // 하단바 추가
+        bottomBar = {
             BottomNavigationBar(navController = navController)
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }, // 스낵바 추가
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { padding ->
             Column(
                 modifier = Modifier
@@ -66,26 +80,52 @@ fun ShopScreen(navController: NavController) {
                     .padding(16.dp)
             ) {
                 // Tab Row
-                TabRow(selectedTabIndex = when (selectedTab) {
-                    "캡슐" -> 0
-                    "스티커" -> 1
-                    "기타" -> 2
-                    else -> 0
-                }) {
+                TabRow(
+                    selectedTabIndex = when (selectedTab) {
+                        "캡슐" -> 0
+                        "스티커" -> 1
+                        "기타" -> 2
+                        else -> 0
+                    },
+                    containerColor = Color(0xFFF2E4DA),
+                ) {
                     Tab(
                         selected = selectedTab == "캡슐",
                         onClick = { selectedTab = "캡슐" }
-                    ) { Text("캡슐") }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(if (selectedTab == "캡슐") Color(0xFFFFC0CB) else Color.Transparent)
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                "캡슐",
+                                color = if (selectedTab == "캡슐") Color.Black else Color.Gray,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
 
                     Tab(
                         selected = selectedTab == "스티커",
                         onClick = { selectedTab = "스티커" }
-                    ) { Text("스티커") }
-
-                    Tab(
-                        selected = selectedTab == "기타",
-                        onClick = { selectedTab = "기타" }
-                    ) { Text("기타") }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(if (selectedTab == "스티커") Color(0xFFFFC0CB) else Color.Transparent)
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                "스티커",
+                                color = if (selectedTab == "스티커") Color.Black else Color.Gray,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -104,7 +144,7 @@ fun ShopScreen(navController: NavController) {
                                 }
                             }
                             if (rowItems.size == 1) {
-                                Spacer(modifier = Modifier.weight(1f)) // 빈 공간을 채워 2개 배치 맞추기
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                         if (index < items.size / 2) Spacer(modifier = Modifier.height(8.dp))
@@ -114,7 +154,7 @@ fun ShopScreen(navController: NavController) {
         }
     )
 
-    // Dialog for confirming purchase
+    // 구매 확인 다이얼로그
     if (showDialog && selectedItem != null) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -124,7 +164,11 @@ fun ShopScreen(navController: NavController) {
                 TextButton(onClick = {
                     showDialog = false
                     coroutineScope.launch {
-                        snackbarHostState.showSnackbar("${selectedItem?.name}을(를) 샀습니다!")
+                        snackbarHostState.showSnackbar("${selectedItem?.name}을(를) 구매했습니다!")
+                    }
+                    // GardenScreen으로 돌아가면서 showCapsuleDialogInitially를 true로 전달
+                    navController.navigate("garden_screen") {
+                        popUpTo("garden_screen") { inclusive = true }
                     }
                 }) {
                     Text("예")
@@ -149,20 +193,24 @@ fun ShopScreen(navController: NavController) {
 fun ShopItemCard(item: ShopItem, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Card(
         modifier = modifier
-            .aspectRatio(1f) // 정사각형 카드
+            .aspectRatio(1f) // 정사각형 아이템 box
             .padding(8.dp)
             .clickable { onClick() }
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
         ) {
             Image(
                 painter = painterResource(id = item.imageRes),
                 contentDescription = item.name,
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(80.dp)
+                    .background(Color.Transparent)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(text = item.name, style = MaterialTheme.typography.bodyMedium)
             Text(text = "${item.price} 포인트", style = MaterialTheme.typography.bodySmall)
         }

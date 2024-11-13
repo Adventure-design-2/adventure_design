@@ -205,11 +205,23 @@ fun VerificationScreen(navController: NavController) {
                 AlertDialog(
                     onDismissRequest = { showSuccessDialog = false },
                     title = { Text("미션 성공") },
-                    text = { Text("미션이 성공적으로 완료되었습니다!") },
+                    text = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // 이미지 추가
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_reward2), // 이미지 리소스 추가
+                            contentDescription = "Success Image",
+                            modifier = Modifier.size(100.dp) // 이미지 크기 조절
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("하트코인을 얻었어요!!", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFE91E63))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("X 100", style = MaterialTheme.typography.headlineMedium, color = Color.Black)
+                    }
+                    },
                     confirmButton = {
-                        TextButton(onClick = { showSuccessDialog = false }) {
-                            Text("확인")
-                        }
+                        var showSuccessDialog = remember { mutableStateOf(false) } // 성공 팝업 표시 여부
+
                     }
                 )
             }

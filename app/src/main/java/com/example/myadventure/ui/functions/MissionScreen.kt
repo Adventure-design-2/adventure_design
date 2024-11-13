@@ -25,7 +25,6 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterial3Api
 @Composable
 fun MissionScreen(
     navController: NavHostController,
@@ -33,53 +32,74 @@ fun MissionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // 화면이 처음 로드될 때 미리 정의된 프롬프트로 미션을 생성하도록 함
-    LaunchedEffect(Unit) {
-        viewModel.createMissions() // 자동으로 미션 생성 요청
-    }
+    // Scaffold를 사용하여 TopBar, Content, BottomBar 레이아웃을 쉽게 구성
+    Scaffold(
+        topBar = {
+            MissionTopAppBar(
+                navController = navController,
+                points = 100, // 예시 값, 실제 사용 시 적절히 교체해야 합니다.
+                userName = "사용자 이름", // 예시 값
+                profileImageUri = null
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(navController = navController)
+        },
+        content = { paddingValues ->
+            // Content 부분: padding을 포함해 적절하게 여유 공간을 줍니다.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // 버튼을 통해 미션 생성 요청
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // 상태에 따라 UI 표시
-        when (uiState) {
-            is UiState.Initial -> {
-                Text("미션을 생성 중입니다...")
-            }
-            is UiState.Loading -> {
-                CircularProgressIndicator()
-            }
-            is UiState.Success -> {
-                val missions = (uiState as UiState.Success).missionContents
 
-                // 미션을 카드로 표시
-                missions.take(3).forEach { mission ->
-                    MissionCard(
-                        mission = mission,
-                        navController = navController,
-                        onMissionSelected = {
-                            // 미션 카드 클릭 시 추가 동작
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 상태에 따라 UI 표시
+                when (uiState) {
+                    is UiState.Initial -> {Button(onClick = {
+                        viewModel.createMissions()
+                    }) {
+                        Text("미션 생성하기")
+                    }
+                    }
+                    is UiState.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is UiState.Success -> {
+                        val missions = (uiState as UiState.Success).missionContents
+
+                        // 미션을 카드로 표시
+                        missions.take(3).forEach { mission ->
+                            MissionCard(
+                                mission = mission,
+                                navController = navController,
+                                onMissionSelected = {
+                                    // 미션 카드 클릭 시 추가 동작
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    is UiState.Error -> {
+                        Text("오류: ${(uiState as UiState.Error).message}")
+                        Button(onClick = {
+                            viewModel.createMissions() // 오류 시에도 미리 준비된 프롬프트로 다시 시도
+                        }) {
+                            Text("다시 시도")
+                        }
+                    }
+                    else -> {}
                 }
             }
-            is UiState.Error -> {
-                Text("오류: ${(uiState as UiState.Error).message}")
-                Button(onClick = {
-                    viewModel.createMissions() // 오류 시에도 미리 준비된 프롬프트로 다시 시도
-                }) {
-                    Text("다시 시도")
-                }
-            }
-            else -> {}
         }
-    }
+    )
 }
 
 @Serializable
@@ -155,7 +175,7 @@ fun MissionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(150.dp)
             .clickable {
                 onMissionSelected()
                 val encodedMissionTitle = URLEncoder.encode(mission.title, StandardCharsets.UTF_8.toString())
@@ -169,15 +189,23 @@ fun MissionCard(
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
+            // 미션 제목
             Text(
                 text = mission.title,
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xFF6D4C41)
             )
+            // 미션 위치
             Text(
-                text = "${mission.location} - ${mission.description}",
+                text = mission.location,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
+            )
+            // 미션 설명
+            Text(
+                text = mission.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.DarkGray
             )
         }
     }

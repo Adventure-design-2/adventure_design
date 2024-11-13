@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
                     composable("shop_screen") {
                         ShopScreen(navController = navController)
                     }
+                    composable("diary_screen") {
+                        DiaryScreen(navController = navController)
+                    }
                     composable("signup_screen") {
                         SignUpScreen(navController = navController)
                     }

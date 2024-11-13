@@ -3,16 +3,21 @@ package com.example.myadventure
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.myadventure.ui.functions.*
 import com.example.myadventure.ui.profile.ProfileComposable
 import com.example.myadventure.ui.theme.MyAdventureTheme
-//import com.example.myadventure.ui.auth.SignUpScreen
 
 class MainActivity : ComponentActivity() {
+    // MissionViewModel을 생성합니다.
+    private val missionViewModel: MissionViewModel by viewModels()
+
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -26,28 +31,26 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(navController = navController)
                     }
                     composable("mission_screen") {
-                        MissionScreen(navController = navController)
+                        // MissionScreen에 MissionViewModel을 전달합니다.
+                        MissionScreen(navController = navController, viewModel = missionViewModel)
                     }
                     composable("profile_screen") {
                         ProfileComposable(navController = navController)
                     }
                     composable("settings_screen") {
-                        SettingsScreen(navController = navController) // 설정 화면 추가
-                    }
-                    composable("map_screen") {
-                        MapScreen() // 지도 화면 추가
+                        SettingsScreen(navController = navController)
                     }
                     composable("shop_screen") {
-                        ShopScreen(navController = navController) // 설정 화면 추가
+                        ShopScreen(navController = navController)
                     }
                     composable("signup_screen") {
-                        SignUpScreen(navController = navController)// 설정 화면 추가
+                        SignUpScreen(navController = navController)
                     }
                     composable("garden_screen") {
-                        GardenScreen(navController = navController)// 설정 화면 추가
+                        GardenScreen(navController = navController)
                     }
                     composable("verification_screen") {
-                        VerificationScreen(navController = navController)// 설정 화면 추가
+                        VerificationScreen(navController = navController)
                     }
                     composable(
                         route = "mission_detail/{missionTitle}",
@@ -56,7 +59,7 @@ class MainActivity : ComponentActivity() {
                         )
                     ) { backStackEntry ->
                         val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
-                        MissionDetailScreen(navController = navController,missionTitle = missionTitle)
+                        MissionDetailScreen(navController = navController, missionTitle = missionTitle)
                     }
                 }
             }

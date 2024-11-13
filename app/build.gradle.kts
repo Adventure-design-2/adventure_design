@@ -1,8 +1,11 @@
 @file:Suppress("DEPRECATION")
 
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("plugin.serialization") version "1.9.10"
 }
 
 android {
@@ -43,7 +46,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
@@ -69,6 +72,7 @@ android {
             excludes += "META-INF/LICENSE.txt"
             excludes += "META-INF/NOTICE"
             excludes += "META-INF/NOTICE.txt"
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
@@ -95,6 +99,14 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.serialization) // Ktor Serialization
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.android.v203)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // kotlinx.serialization JSON 파싱
+    implementation(libs.kotlinx.serialization.json)
+
 
     // AndroidSVG 라이브러리 추가
     implementation(libs.androidsvg)
@@ -105,6 +117,7 @@ dependencies {
 
     // 코루틴 라이브러리 추가 (비동기 작업을 위해)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.espresso.core)
 
     // 테스트 디펜던시
     testImplementation(libs.junit)
@@ -112,6 +125,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    implementation(libs.generativeai)
 
 
     implementation(libs.cloud.google.cloud.vertexai)

@@ -3,15 +3,13 @@ package com.example.myadventure.backend.data
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.client.features.contentnegotiation.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.*
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import com.example.myadventure.backend.mission.multimodal
 
 // Ktor 클라이언트 설정
 val client = HttpClient {
@@ -31,17 +29,21 @@ data class Mission(
     val description: String
 )
 
-// 미션 생성 요청 함수
+// Multimodal의 생성 결과를 서버에 전송하는 미션 생성 함수
 suspend fun requestMissionCreation(): Mission? {
     return try {
-        // 서버에 POST 요청을 보내고 미션 생성 요청
-        val response: Mission = client.post("https://example.com/api/generate-mission") {
+        // Multimodal 함수에서 콘텐츠 생성 데이터 가져오기
+        val generatedContent = multimodal()
+
+        // 콘텐츠를 JSON 형식으로 변환
+        val contentJson = Json.encodeToString(generatedContent)
+
+        // 서버에 POST 요청을 보내고 응답을 Mission 객체로 파싱
+        client.post("https://example.com/api/generate-mission") {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
-            // 필요하면 요청 본문에 데이터 추가
-            setBody(mapOf("type" to "couple", "difficulty" to "medium"))
-        }
-        response // 성공 시 생성된 미션 반환
+            setBody(mapOf("content" to contentJson))
+        }.body() // 응답을 Mission 객체로 변환하여 반환
     } catch (e: Exception) {
         e.printStackTrace()
         null // 실패 시 null 반환

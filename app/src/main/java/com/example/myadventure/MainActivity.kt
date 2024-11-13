@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.myadventure
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
@@ -34,8 +37,9 @@ class MainActivity : ComponentActivity() {
                     composable("settings_screen") {
                         SettingsScreen(navController = navController) // 설정 화면 추가
                     }
-                    composable("map_screen") {
-                    }
+                    //composable("map_screen") {
+                        //MapScreen() // 지도 화면 추가
+                    //}
                     composable("shop_screen") {
                         ShopScreen(navController = navController) // 설정 화면 추가
                     }
@@ -62,5 +66,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//
-//MapScreen() // 지도 화면 추가

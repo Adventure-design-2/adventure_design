@@ -12,28 +12,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.myadventure.Mission
+import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
-import com.example.myadventure.ui.profile.UserPreferences
+import com.example.myadventure.UiState
+import kotlinx.serialization.Serializable
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 
 @Composable
-fun MissionScreen(navController: NavController, currentMission: String? = "") {
-    val context = LocalContext.current
-    val userPreferences = UserPreferences.getInstance(context)
+fun MissionScreen(
+    navController: NavHostController,
+    viewModel: MissionViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 사용자 포인트, 이름, 프로필 이미지 URI 상태 관리
-    val points by userPreferences.pointsFlow.collectAsState(initial = userPreferences.getPoints())
-    val userName by remember { mutableStateOf(userPreferences.getUserName()) }
-    val profileImageUriString by remember { mutableStateOf(userPreferences.getProfileImageUri()) }
-    val profileImageUri = profileImageUriString?.let { Uri.parse(it) }
 
     // 미션 선택 다이얼로그 상태와 선택된 미션 상태 추가
     var showSelectDialog by remember { mutableStateOf(false) }
@@ -107,19 +107,27 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
                     }
                 )
             }
+
         }
-    )
+    }
 }
 
+
+@Serializable
+data class Mission(
+    val title: String,
+    val location: String,
+    val description: String
+)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionTopAppBar(
+    navController: NavController,
     points: Int,
     userName: String,
-    profileImageUri: Uri?,
-    onProfileClick: () -> Unit
+    profileImageUri: Uri?
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA)),
@@ -129,53 +137,45 @@ fun MissionTopAppBar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 프로필 이미지 (URI가 null일 경우 기본 이미지 사용)
+                // 프로필 이미지 클릭 시 유저 정보 화면으로 이동
                 Image(
                     painter = rememberAsyncImagePainter(profileImageUri ?: R.drawable.ic_profile),
                     contentDescription = "프로필 사진",
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable { onProfileClick() }
+                        .clickable {
+                            navController.navigate("profile_screen")
+                        }
                 )
-
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // 사용자 이름
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.clickable { onProfileClick() }
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // 포인트 표시
-                Text(
-                    text = "포인트: $points",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                // 유저 정보 표시
+                UserInfo(userName = userName, points = points) {
+                    navController.navigate("profile_screen")
+                }
             }
         }
     )
 }
 
 @Composable
-fun CurrentMissionCard(selectedMission: String) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { /* 미션 상세 보기 */ },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDEFEF)) // 밝은 배경 색상 적용
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+fun UserInfo(userName: String, points: Int, onProfileClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.clickable { onProfileClick() }
         )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = "포인트: $points",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+
 //        {
 //            Text(text = "현재 미션: $selectedMission", style = MaterialTheme.typography.headlineSmall, color = Color(0xFF6D4C41))
 //        }
@@ -232,10 +232,15 @@ fun MissionSelectionCard(
 
 
 
+    }
+}
+
 @Composable
 fun MissionCard(
-    mission: String,
-    onMissionSelected: (String) -> Unit
+    mission: Mission,
+    navController: NavController,
+    onMissionSelected: () -> Unit
+
 ) {
     Card(
         modifier = Modifier
@@ -243,20 +248,27 @@ fun MissionCard(
             .height(80.dp)
             .clickable {
                 onMissionSelected(mission) // 미션을 선택하고 다이얼로그를 표시
+
             }
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF7E7E7))
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
             Text(
-                text = mission,
+
+                text = mission.title,
+
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xFF6D4C41)
+            )
+            Text(
+                text = "${mission.location} - ${mission.description}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
             )
         }
     }
@@ -265,6 +277,7 @@ fun MissionCard(
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     var selectedItem by remember { mutableStateOf("home") }
+
 
     NavigationBar(
         containerColor = Color(0xFFEAD9C9) // 배경 색상 설정
@@ -332,9 +345,26 @@ fun BottomNavigationBar(navController: NavController) {
                 selectedItem = "other"
                 navController.navigate("home_screen")
             }
+
         )
+
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(painterResource(id = item.iconRes), contentDescription = item.label) },
+                label = { Text(item.label) },
+                selected = selectedItem == item.label,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color(0xFFFFC0CB),
+                    unselectedIconColor = Color.Black
+                ),
+                onClick = {
+                    selectedItem = item.label
+                    navController.navigate(item.route)
+                }
+            )
+        }
     }
 }
 
-
+data class NavBarItem(val label: String, val iconRes: Int, val route: String)
 

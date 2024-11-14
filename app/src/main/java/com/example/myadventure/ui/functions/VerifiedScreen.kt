@@ -171,7 +171,7 @@ fun VerificationScreen(navController: NavController) {
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_diary),
+                            painter = painterResource(id = R.drawable.ic_galary),
                             contentDescription = "갤러리",
                             modifier = Modifier
                                 .size(48.dp)

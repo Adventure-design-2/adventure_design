@@ -17,16 +17,10 @@ fun StartScreen(navController: NavController) {
 
     // 일정 시간 후 다음 화면으로 자동 이동
     LaunchedEffect(Unit) {
-        delay(2000) // 2초 대기 후
-        navigateToNextScreen = true
-    }
+//        delay(100) // 2초 딜레이
+        navController.navigate("signup_screen") {
+            popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
 
-    // navigateToNextScreen이 true일 때 signup_screen으로 이동
-    LaunchedEffect(navigateToNextScreen) {
-        if (navigateToNextScreen) {
-            navController.navigate("signup_screen") {
-                popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
-            }
         }
     }
 
@@ -42,7 +36,7 @@ fun StartScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "My Adventure에 오신 것을 환영합니다!",
+                    text = "!!!",
                     style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))

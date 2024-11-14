@@ -1,4 +1,3 @@
-@file:Suppress("DEPRECATION")
 import java.util.Properties
 
 
@@ -59,11 +58,13 @@ android {
         compose = true
     }
     composeOptions {
+
         kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+
         }
     }
     buildTypes {
@@ -106,6 +107,18 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
 
+    // Core AndroidX dependencies
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    // Coil for Compose (이미지 로딩 라이브러리)
+    implementation("io.coil-kt:coil-compose:2.1.0")
+
+    // Accompanist for permissions handling in Compose
+    implementation(libs.accompanist.permissions)
+
+    // AndroidSVG 라이브러리
+    implementation("com.caverock:androidsvg:1.4")
 
     // ktor
     implementation(libs.ktor.client.core)
@@ -119,7 +132,13 @@ dependencies {
 
     // kotlinx.serialization JSON 파싱
     implementation(libs.kotlinx.serialization.json)
-
+    
+    // Jetpack Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
 
     // AndroidSVG 라이브러리 추가
     implementation(libs.androidsvg)
@@ -140,6 +159,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
 
     implementation(libs.generativeai)
+    
 
 
     implementation(libs.cloud.google.cloud.vertexai)
@@ -147,5 +167,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
 

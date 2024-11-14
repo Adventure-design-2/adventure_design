@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
-fun DiaryScreen(navController: NavController) {
+fun DiaryScreens(navController: NavController) {
     val context = LocalContext.current
     val diaryEntries = remember { mutableStateListOf<DiaryEntry>() }
 

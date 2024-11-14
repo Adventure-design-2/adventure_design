@@ -56,17 +56,16 @@ fun MissionScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 // 버튼을 통해 미션 생성 요청
-
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 상태에 따라 UI 표시
                 when (uiState) {
-                    is UiState.Initial -> {Button(onClick = {
-                        viewModel.createMissions()
-                    }) {
-                        Text("미션 생성하기")
-                    }
+                    is UiState.Initial -> {
+                        Button(onClick = {
+                            viewModel.createMissions()
+                        }) {
+                            Text("미션 생성하기")
+                        }
                     }
                     is UiState.Loading -> {
                         CircularProgressIndicator()
@@ -74,16 +73,17 @@ fun MissionScreen(
                     is UiState.Success -> {
                         val missions = (uiState as UiState.Success).missionContents
 
-                        // 미션을 카드로 표시
+                        // 미션을 카드로 표시 (제목만 표시)
                         missions.take(3).forEach { mission ->
-                            MissionCard(
+                            MissionTitleCard(
                                 mission = mission,
                                 navController = navController,
                                 onMissionSelected = {
-                                    // 미션 카드 클릭 시 추가 동작
+                                    // 미션 카드 클릭 시 추가 동작: 미션 상세 화면으로 이동
+                                    navController.currentBackStackEntry?.savedStateHandle?.set("mission", mission)
+                                    navController.navigate("mission_detail_screen")
                                 }
                             )
-
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
@@ -167,7 +167,7 @@ fun UserInfo(userName: String, points: Int, onProfileClick: () -> Unit) {
 }
 
 @Composable
-fun MissionCard(
+fun MissionTitleCard(
     mission: Mission,
     navController: NavController,
     onMissionSelected: () -> Unit
@@ -175,11 +175,13 @@ fun MissionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(100.dp)
             .clickable {
                 onMissionSelected()
                 val encodedMissionTitle = URLEncoder.encode(mission.title, StandardCharsets.UTF_8.toString())
-                navController.navigate("mission_detail/$encodedMissionTitle")
+                val encodedMissionDescription = URLEncoder.encode(mission.description, StandardCharsets.UTF_8.toString())
+                val encodedMissionLocation = URLEncoder.encode(mission.location, StandardCharsets.UTF_8.toString())
+                navController.navigate("mission_detail/$encodedMissionTitle/$encodedMissionDescription/$encodedMissionLocation")
             }
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF7E7E7))
@@ -187,29 +189,21 @@ fun MissionCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
+                .padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
         ) {
-            // 미션 제목
+            // 미션 제목만 표시
             Text(
                 text = mission.title,
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color(0xFF6D4C41)
-            )
-            // 미션 위치
-            Text(
-                text = mission.location,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-            // 미션 설명
-            Text(
-                text = mission.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.DarkGray
+                color = Color(0xFF6D4C41),
+                modifier = Modifier.align(Alignment.Start)
             )
         }
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {

@@ -12,11 +12,15 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun StartScreen(navController: NavController) {
-    // 화면이 표시될 때 2초 후에 자동으로 이동하는 LaunchedEffect 설정
+    // 다음 화면으로 이동하는 조건을 위한 상태 변수
+    var navigateToNextScreen by remember { mutableStateOf(false) }
+
+    // 일정 시간 후 다음 화면으로 자동 이동
     LaunchedEffect(Unit) {
 //        delay(100) // 2초 딜레이
         navController.navigate("signup_screen") {
             popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
+
         }
     }
 

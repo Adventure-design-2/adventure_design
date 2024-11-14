@@ -14,29 +14,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.myadventure.Mission
+import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
-import com.example.myadventure.ui.profile.UserPreferences
+import com.example.myadventure.UiState
+import kotlinx.serialization.Serializable
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 
-
 @Composable
-fun MissionScreen(navController: NavController, currentMission: String? = "") {
-    val context = LocalContext.current
-    val userPreferences = UserPreferences.getInstance(context)
+fun MissionScreen(
+    navController: NavHostController,
+    viewModel: MissionViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 사용자 포인트, 이름, 프로필 이미지 URI 상태 관리
-    val points by userPreferences.pointsFlow.collectAsState(initial = userPreferences.getPoints())
-    val userName by remember { mutableStateOf(userPreferences.getUserName()) }
-    val profileImageUriString by remember { mutableStateOf(userPreferences.getProfileImageUri()) }
-    val profileImageUri = profileImageUriString?.let { Uri.parse(it) }
+
+    // 미션 선택 다이얼로그 상태와 선택된 미션 상태 추가
+    var showSelectDialog by remember { mutableStateOf(false) }
+    var selectedMission by remember { mutableStateOf<String?>(null) } // 실제 선택된 미션 저장
 
     Scaffold(
         containerColor = Color(0xFFFFF9F0), // 배경색
@@ -48,8 +51,7 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
                 onProfileClick = { navController.navigate("profile_screen") }
             )
         },
-
-        bottomBar = { // 추가된 부분
+        bottomBar = {
             BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
@@ -62,8 +64,10 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
 //                CurrentMissionCard(currentMission ?: "")
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
+
                     navController = navController,
                     missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
+
                     missionDetails = mapOf(
                         "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
                         "야외 활동 미션 1" to ("산" to "산책하기"),
@@ -71,21 +75,64 @@ fun MissionScreen(navController: NavController, currentMission: String? = "") {
                     ),
                     refreshCount = 3,
                     remainingTime = 300,
-                    onMissionSelected = {},
+                    onMissionSelected = { mission ->
+                        selectedMission = mission // 미션을 선택하고 저장
+                        showSelectDialog = true // 다이얼로그 표시
+                    },
                     onRefresh = {}
                 )
             }
+
+            // AlertDialog 추가
+            if (showSelectDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSelectDialog = false },
+                    title = { Text("선택 하시겠습니까?") },
+                    text = { Text("이 미션을 선택하시겠습니까?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            // "예" 버튼을 눌렀을 때만 다음 화면으로 이동
+                            selectedMission?.let {
+                                val encodedMissionTitle = URLEncoder.encode(it, StandardCharsets.UTF_8.toString())
+                                navController.navigate("mission_detail/$encodedMissionTitle") {
+                                    popUpTo("mission_screen") { inclusive = true }
+                                }
+                            }
+                            showSelectDialog = false // 다이얼로그 닫기
+                        }) {
+                            Text("예")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showSelectDialog = false // 다이얼로그 닫기
+                        }) {
+                            Text("아니요")
+                        }
+                    }
+                )
+            }
+
         }
-    )
+    }
 }
+
+
+@Serializable
+data class Mission(
+    val title: String,
+    val location: String,
+    val description: String
+)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionTopAppBar(
+    navController: NavController,
     points: Int,
     userName: String,
-    profileImageUri: Uri?,
-    onProfileClick: () -> Unit
+    profileImageUri: Uri?
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA)),
@@ -93,69 +140,27 @@ fun MissionTopAppBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            )
-            {
-                // 프로필 이미지 (URI가 null일 경우 기본 이미지 사용)
+
+
+            ) {
+                // 프로필 이미지 클릭 시 유저 정보 화면으로 이동
+
                 Image(
                     painter = rememberAsyncImagePainter(profileImageUri ?: R.drawable.ic_profile),
                     contentDescription = "프로필 사진",
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable { onProfileClick() }
+                        .clickable {
+                            navController.navigate("profile_screen")
+                        }
                 )
-
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // 사용자 이름
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.clickable { onProfileClick() }
-                )
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // 포인트 표시
-//                Text(
-//                    text = "포인트: $points",
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    color = MaterialTheme.colorScheme.onPrimary
-//                )
-            }
-        }
-    )
-}
-
-//@Composable
-//fun CurrentMissionCard(selectedMission: String) {
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(8.dp)
-//            .clickable { /* 미션 상세 보기 */ },
-//        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDEFEF)) // 밝은 배경 색상 적용
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp)
-//        )
-
-
-/**        {
-//            Text(text = "현재 미션: $selectedMission", style = MaterialTheme.typography.headlineSmall, color = Color(0xFF6D4C41))
-//        }
-**/
-
-//    }
-//}
 
 @Composable
 fun MissionSelectionCard(
-    navController: NavController,
     missions: List<String>,
     missionDetails: Map<String, Pair<String, String>>, // 미션별 위치와 설명 정보
     refreshCount: Int,
@@ -190,11 +195,13 @@ fun MissionSelectionCard(
         missions.forEach { mission ->
             MissionCard(
                 mission = mission,
-                navController = navController,
                 onMissionSelected = onMissionSelected
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
 
         // 새로고침 버튼 (주석 처리된 부분은 필요에 따라 활성화)
         // Button(
@@ -218,15 +225,17 @@ fun MissionSelectionCard(
         //         style = MaterialTheme.typography.bodyMedium
         //     )
         // }
+
     }
 
 
 
 @Composable
 fun MissionCard(
-    mission: String,
+    mission: Mission,
     navController: NavController,
-    onMissionSelected: (String) -> Unit
+    onMissionSelected: () -> Unit
+
 ) {
     var showDialog by remember { mutableStateOf(false) } // 다이얼로그 표시 상태
 
@@ -234,16 +243,16 @@ fun MissionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp) // 세로 크기를 더 키움
-            .clickable {
-                onMissionSelected(mission)
 
-                // 미션 제목만 전달하여 상세 화면으로 이동
-                val encodedMissionTitle = URLEncoder.encode(mission, StandardCharsets.UTF_8.toString())
-                navController.navigate("mission_detail/$encodedMissionTitle")
+            .height(120.dp) // 세로 크기를 더 키움
+
+            .clickable {
+                onMissionSelected(mission) // 미션을 선택하고 다이얼로그를 표시
+
             }
             .border(1.dp, Color(0xFFC0B38B), shape = RoundedCornerShape(8.dp)) // 모서리가 둥근 테두리 추가
             .padding(vertical = 4.dp),
+
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F1E4)), // 부드러운 색상
         shape = RoundedCornerShape(8.dp) // Card 자체 모서리도 둥글게 설정
     ) {
@@ -311,16 +320,23 @@ fun MissionCard(
 
         Box(
             contentAlignment = Alignment.Center,
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
             Text(
+
                 text = mission,
                 fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.8f, // 크기를 1.5배 줄임
                 color = Color(0xFF6D4C41)
-            )
 
+            )
+            Text(
+                text = "${mission.location} - ${mission.description}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
         }
     }
 }
@@ -328,6 +344,7 @@ fun MissionCard(
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     var selectedItem by remember { mutableStateOf("home") }
+
 
     NavigationBar(
         containerColor = Color(0xFFF0DDC1) // 배경 색상 설정
@@ -347,13 +364,18 @@ fun BottomNavigationBar(navController: NavController) {
                 )
             },
             selected = selectedItem == "home",
+            modifier = Modifier
+                .background(if (selectedItem == "home") Color(0xFFFFC0CB) else Color.Transparent) // 선택된 아이템의 배경색 설정
+                .padding(4.dp), // 배경색 여백 추가
             colors = NavigationBarItemDefaults.colors(
+
                 selectedIconColor = Color(0xFFFFFFFF), // 선택된 아이템의 색상
+
                 unselectedIconColor = Color.Black
             ),
             onClick = {
                 selectedItem = "home"
-                navController.navigate("mission_screen") // 'home' 클릭 시 'mission_screen'으로 이동
+                navController.navigate("mission_screen")
             }
         )
         NavigationBarItem(
@@ -366,8 +388,11 @@ fun BottomNavigationBar(navController: NavController) {
                 )
             },
             selected = selectedItem == "garden",
+            modifier = Modifier
+                .background(if (selectedItem == "garden") Color(0xFFFFC0CB) else Color.Transparent)
+                .padding(4.dp),
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFFFFC0CB),
+                selectedIconColor = Color.Black,
                 unselectedIconColor = Color.Black
             ),
             onClick = {
@@ -385,8 +410,11 @@ fun BottomNavigationBar(navController: NavController) {
                 )
             },
             selected = selectedItem == "shop",
+            modifier = Modifier
+                .background(if (selectedItem == "shop") Color(0xFFFFC0CB) else Color.Transparent)
+                .padding(4.dp),
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFFFFC0CB),
+                selectedIconColor = Color.Black,
                 unselectedIconColor = Color.Black
             ),
             onClick = {
@@ -404,17 +432,39 @@ fun BottomNavigationBar(navController: NavController) {
                 )
             },
             selected = selectedItem == "other",
+            modifier = Modifier
+                .background(if (selectedItem == "other") Color(0xFFFFC0CB) else Color.Transparent)
+                .padding(4.dp),
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFFFFC0CB),
+                selectedIconColor = Color.Black,
                 unselectedIconColor = Color.Black
             ),
             onClick = {
                 selectedItem = "other"
-                navController.navigate("home_screen") // 'other' 클릭 시 'home_screen'으로 이동
+                navController.navigate("home_screen")
             }
+
         )
+
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(painterResource(id = item.iconRes), contentDescription = item.label) },
+                label = { Text(item.label) },
+                selected = selectedItem == item.label,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color(0xFFFFC0CB),
+                    unselectedIconColor = Color.Black
+                ),
+                onClick = {
+                    selectedItem = item.label
+                    navController.navigate(item.route)
+                }
+            )
+        }
     }
 
 
 }
+
+data class NavBarItem(val label: String, val iconRes: Int, val route: String)
 

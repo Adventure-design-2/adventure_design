@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -33,7 +34,7 @@ fun GardenScreen(navController: NavController) {
         containerColor = Color(0xFFF2E4DA),
         topBar = {
             TopAppBar(
-                title = { Text("캡슐 가든") },
+                title = { Text("캡슐 정원") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "뒤로가기")
@@ -52,7 +53,7 @@ fun GardenScreen(navController: NavController) {
             ) {
 //                 배경 그림
                 Image(
-                    painter = painterResource(id = R.drawable.ic_60), // 배경 그림 파일
+                    painter = painterResource(id = R.drawable.ic_gardenground), // 배경 그림 파일
                     contentDescription = "배경",
                     modifier = Modifier.fillMaxSize()
                 )
@@ -60,12 +61,13 @@ fun GardenScreen(navController: NavController) {
 //                 팻말
                 Box(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp)
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 24.dp, bottom = 80.dp)
+                        .scale(0.8f)
                         .clickable { showDiaryDialog = true } // 팻말을 클릭 시 다이얼로그 표시
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.signss), // 팻말 그림 파일
+                        painter = painterResource(id = R.drawable.ic_signpost), // 팻말 그림 파일
                         contentDescription = "팻말"
                     )
                 }
@@ -73,10 +75,11 @@ fun GardenScreen(navController: NavController) {
                 // 타임캡슐 아이콘 (선택적으로 표시)
                 if (showCapsuleIcon) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_time), // 타임캡슐 아이콘
+                        painter = painterResource(id = R.drawable.ic_pill), // 타임캡슐 아이콘
                         contentDescription = "타임캡슐",
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .scale(0.4f)
                             .padding(50.dp)
                     )
                 }
@@ -85,7 +88,7 @@ fun GardenScreen(navController: NavController) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable { showCapsuleDialog = true }
+                        .clickable { navController.navigate("shop_screen") }
                 )
             }
 

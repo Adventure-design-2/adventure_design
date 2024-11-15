@@ -14,12 +14,20 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 // UI 상태를 나타내는 sealed class 정의
+// UI 상태를 나타내는 sealed class 정의
 sealed class UiState {
     object Initial : UiState()
     object Loading : UiState()
-    data class Success(val missionContents: List<Mission>) : UiState()
+    data class Success(
+        val missionContents: List<Mission>,
+        val points: Int = 100, // 초기 포인트 값
+        val userName: String = "사용자 이름", // 사용자 이름
+        val profileImageUri: String? = null, // 프로필 이미지 URI (String 타입)
+        val currentMission: Mission? = null // 현재 선택된 미션
+    ) : UiState()
     data class Error(val message: String) : UiState()
 }
+
 
 // 미션 데이터 모델 정의
 @Serializable
@@ -112,13 +120,18 @@ class MissionViewModel : ViewModel() {
 
                         // 성공적인 응답 처리
                         if (missions.isNotEmpty()) {
-                            _uiState.value = UiState.Success(missions)
+                            _uiState.value = UiState.Success(
+                                missionContents = missions,
+                                points = 100,
+                                userName = "사용자 이름",
+                                profileImageUri = null,
+                                currentMission = missions.firstOrNull()
+                            )
                         } else {
                             _uiState.value = UiState.Error("No missions were generated")
                         }
                     } catch (e: Exception) {
-                        _uiState.value =
-                            UiState.Error("Failed to parse mission response: ${e.localizedMessage}")
+                        _uiState.value = UiState.Error("Failed to parse mission response: ${e.localizedMessage}")
                     }
                 } ?: run {
                     _uiState.value = UiState.Error("No content in response")

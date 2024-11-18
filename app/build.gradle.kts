@@ -1,3 +1,4 @@
+
 import java.util.Properties
 
 
@@ -59,11 +60,14 @@ android {
     }
     composeOptions {
 
+
         kotlinCompilerExtensionVersion = "1.5.3"
+
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+
 
         }
     }
@@ -167,4 +171,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
 

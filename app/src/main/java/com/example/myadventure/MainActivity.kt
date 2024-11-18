@@ -38,8 +38,13 @@ class MainActivity : ComponentActivity() {
                         ProfileComposable(navController = navController)
                     }
                     composable("settings_screen") {
-                        SettingsScreen(navController = navController)
+
+                        SettingsScreen(navController = navController) // 설정 화면 추가
                     }
+//                    composable("map_screen") {
+//                        MapScreen() // 지도 화면 추가
+//                    }
+
                     composable("shop_screen") {
                         ShopScreen(navController = navController)
                     }
@@ -73,6 +78,7 @@ class MainActivity : ComponentActivity() {
                             missionLocation = missionLocation
                         )
                     }
+
 
 
                 }

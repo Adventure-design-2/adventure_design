@@ -1,4 +1,5 @@
 package com.example.myadventure.ui.functions
+
 // Compose와 Android 관련 import
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -42,7 +43,17 @@ fun HomeScreen(navController: NavController) {
         containerColor = Color(0xFFF2E4DA),
         topBar = {
             TopAppBar(
-                title = { Text("모아보기") },
+                title = { Text("") },
+                actions = {
+                    // 설정 아이콘 버튼을 오른쪽 상단에 배치
+                    IconButton(onClick = { navController.navigate("settings_screen") }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_setting),
+                            contentDescription = "설정",
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA))
             )
         },
@@ -91,19 +102,10 @@ fun HomeScreen(navController: NavController) {
                             .offset(x = 16.dp, y = (-16).dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        FeatureCard(
-                            navController = navController,
-                            route = "settings_screen",
-                            text = "설정",
-                            backgroundRes = R.drawable.ic_settings_24
 
-                        )
                     }
-
                 }
-                }
-
-
+            }
         }
     )
 }

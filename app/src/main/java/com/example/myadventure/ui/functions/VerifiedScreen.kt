@@ -158,7 +158,69 @@ fun VerificationScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 나머지 기존 코드 유지...
+
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    selectedImageUri?.let { uri ->
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "선택된 이미지",
+                            modifier = Modifier.size(200.dp)
+                        )
+                    } ?: run {
+                        Text("미션인증사진", color = Color.DarkGray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(40.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = "카메라",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable {
+                                    cameraLauncher.launch(null)
+                                }
+                        )
+                        Text("카메라", fontSize = 16.sp)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_galary),
+                            contentDescription = "갤러리",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable {
+                                    galleryLauncher.launch("image/*")
+                                }
+                        )
+                        Text("갤러리", fontSize = 16.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    placeholder = { Text("댓글을 입력하세요...") },
+                    enabled = isCommentEnabled,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(8.dp)
+                )
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -207,6 +269,8 @@ fun VerificationScreen(navController: NavController) {
                 }
             }
 
+
+
             // 코멘트 등록 팝업
             if (showCommentRegisteredDialog) {
                 AlertDialog(
@@ -247,6 +311,7 @@ fun VerificationScreen(navController: NavController) {
                     }
                 )
             }
+
         }
     )
 }

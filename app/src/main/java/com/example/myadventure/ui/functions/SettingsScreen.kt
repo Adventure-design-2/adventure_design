@@ -82,10 +82,20 @@ fun SettingsTopAppBar(
     points: Int,
     userName: String,
     profileImageUri: Uri?,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onBackClick: () -> Unit // 뒤로 가기 클릭을 처리할 콜백
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
+        navigationIcon = {
+            IconButton(onClick = { onBackClick() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_back), // 사용자 정의 아이콘 사용
+                    contentDescription = "뒤로 가기",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        },
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -125,6 +135,8 @@ fun SettingsTopAppBar(
         }
     )
 }
+
+
 
 @Composable
 fun SettingOptionCard(iconRes: Int, text: String, onClick: () -> Unit) {

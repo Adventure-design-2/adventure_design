@@ -35,9 +35,9 @@ fun SignUpScreen(navController: NavController) {
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.ic_diary),
+            painter = painterResource(id = R.drawable.applogo),
             contentDescription = "Logo",
-            modifier = Modifier.size(100.dp)
+            modifier = Modifier.size(170.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -51,6 +51,36 @@ fun SignUpScreen(navController: NavController) {
                 selected = selectedTab == "Log in",
                 onClick = { selectedTab = "Log in" }
             ) { Text("Log in") }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             Tab(
                 selected = selectedTab == "Sign up",
@@ -129,7 +159,7 @@ fun LoginContent(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("이전에 예를 로그인을 하셨습니다.", fontSize = 14.sp, color = Color.Gray)
+        Text("이전에 애플 로그인을 하셨습니다.", fontSize = 14.sp, color = Color.Gray)
 
         TextFieldWithCloseIcon("Email", email) { email = it }
         TextFieldWithCloseIcon("Password", password) { password = it }
@@ -203,9 +233,30 @@ fun SocialMediaIcons() {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painter = painterResource(id = R.drawable.ic_apple), contentDescription = "Apple")
-        Icon(painter = painterResource(id = R.drawable.ic_google), contentDescription = "Google")
-//        Icon(painter = painterResource(id = R.drawable.ic_kakao), contentDescription = "Facebook")
-        Icon(painter = painterResource(id = R.drawable.ic_meta), contentDescription = "Kakao")
+        Icon(
+            painter = painterResource(id = R.drawable.ic_apple),
+            contentDescription = "Apple",
+            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
+            tint = Color.Unspecified
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_google),
+            contentDescription = "Google",
+            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
+            tint = Color.Unspecified
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_facebook),
+            contentDescription = "Facebook",
+            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
+            tint = Color.Unspecified
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_kakao),
+            contentDescription = "Kakao",
+            modifier = Modifier.size(39.dp), // 아이콘 크기 설정
+            tint = Color.Unspecified
+        )
     }
 }
+

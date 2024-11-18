@@ -1,48 +1,67 @@
 package com.example.myadventure.ui.functions
 
-import android.Manifest
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import androidx.compose.ui.platform.LocalFocusManager // 추가된 import 문
 import java.text.SimpleDateFormat
-import java.util.Locale // 추가된 import 문
-import java.util.Date // 추가된 import 문
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VerificationScreen(navController: NavController) {
-    var commentText by remember { mutableStateOf(TextFieldValue("")) }
+    val commentText by remember { mutableStateOf(TextFieldValue("")) }
     var isCommentEnabled by remember { mutableStateOf(false) }
     var isCommentRegistered by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -53,6 +72,10 @@ fun VerificationScreen(navController: NavController) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val missionName = "미션 이름 예시" // 미션명 추가
     val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) // 현재 날짜 추가
+
+    // 팝업 다이얼로그 표시 여부 상태 관리 변수 추가
+    var showCommentRegisteredDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     fun saveBitmapToFile(context: Context, bitmap: Bitmap): Uri? {
         val file = File(context.filesDir, "diary_entry_${System.currentTimeMillis()}.jpg")
@@ -112,6 +135,7 @@ fun VerificationScreen(navController: NavController) {
         }
     }
 
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFFF2E4DA),
@@ -120,7 +144,7 @@ fun VerificationScreen(navController: NavController) {
                 title = { Text("인증사진 기록") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF2E4DA))
@@ -134,6 +158,7 @@ fun VerificationScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Box(
                     modifier = Modifier
                         .size(200.dp)
@@ -196,6 +221,7 @@ fun VerificationScreen(navController: NavController) {
                         .padding(8.dp)
                 )
 
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
@@ -205,6 +231,7 @@ fun VerificationScreen(navController: NavController) {
                         }
                         isCommentRegistered = true
                         focusManager.clearFocus() // 키보드를 내리도록 추가
+                        showCommentRegisteredDialog = true // 코멘트 등록 팝업 다이얼로그 표시
                     },
                     enabled = isCommentEnabled && commentText.text.isNotBlank() && !isCommentRegistered,
                     colors = ButtonDefaults.buttonColors(
@@ -231,7 +258,7 @@ fun VerificationScreen(navController: NavController) {
                                 outputStream.flush()
                                 outputStream.close()
                                 Toast.makeText(context, "스크린샷이 저장되었습니다!", Toast.LENGTH_SHORT).show()
-                                navController.navigate("garden_screen")
+                                showSuccessDialog = true // 미션 성공 팝업 다이얼로그 표시
                             }
                         }
                     },
@@ -265,29 +292,28 @@ fun VerificationScreen(navController: NavController) {
                     title = { Text("미션 성공") },
                     text = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        // 이미지 추가
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_reward2), // 이미지 리소스 추가
-                            contentDescription = "Success Image",
-                            modifier = Modifier.size(100.dp) // 이미지 크기 조절
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("하트코인을 얻었어요!!", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFE91E63))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("X 100", style = MaterialTheme.typography.headlineMedium, color = Color.Black)
-                    }
+                            // 이미지 추가
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_reward2), // 이미지 리소스 추가
+                                contentDescription = "Success Image",
+                                modifier = Modifier.size(100.dp) // 이미지 크기 조절
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("하트코인을 얻었어요!!", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFE91E63))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("X 100", style = MaterialTheme.typography.headlineMedium, color = Color.Black)
+                        }
                     },
                     confirmButton = {
-                        var showSuccessDialog = remember { mutableStateOf(false) } // 성공 팝업 표시 여부
-
+                        TextButton(onClick = { showSuccessDialog = false }) {
+                            Text("확인")
+                        }
                     }
                 )
             }
 
-
         }
     )
 }
-
 
 

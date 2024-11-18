@@ -4,12 +4,47 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,12 +58,8 @@ import com.example.myadventure.Mission
 import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
 import com.example.myadventure.UiState
-import kotlinx.serialization.Serializable
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionScreen(
     navController: NavHostController,
@@ -36,19 +67,18 @@ fun MissionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-
     // 미션 선택 다이얼로그 상태와 선택된 미션 상태 추가
-    var showSelectDialog by remember { mutableStateOf(false) }
-    var selectedMission by remember { mutableStateOf<String?>(null) } // 실제 선택된 미션 저장
+    var showMissionDetailDialog by remember { mutableStateOf(false) }
+    var selectedMission by remember { mutableStateOf<Mission?>(null) }
 
     Scaffold(
         containerColor = Color(0xFFFFF9F0), // 배경색
         topBar = {
             MissionTopAppBar(
-                points = points,
-                userName = userName,
-                profileImageUri = profileImageUri,
-                onProfileClick = { navController.navigate("profile_screen") }
+                navController = navController,
+                points = 100, // 예시 값, 실제 사용 시 적절히 교체해야 합니다.
+                userName = "사용자 이름", // 예시 값
+                profileImageUri = null
             )
         },
         bottomBar = {
@@ -59,72 +89,84 @@ fun MissionScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-//                CurrentMissionCard(currentMission ?: "")
-                Spacer(modifier = Modifier.height(16.dp))
-                MissionSelectionCard(
 
-                    navController = navController,
-                    missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
+                // 상태에 따라 UI 표시
+                when (uiState) {
+                    is UiState.Initial -> {
+                        Text("미션을 생성할 준비가 되었습니다.")
+                    }
+                    is UiState.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is UiState.Success -> {
+                        val missions = (uiState as UiState.Success).missionContents
 
-                    missionDetails = mapOf(
-                        "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
-                        "야외 활동 미션 1" to ("산" to "산책하기"),
-                        "실내 활동 미션 1" to ("집" to "정리정돈")
-                    ),
-                    refreshCount = 3,
-                    remainingTime = 300,
-                    onMissionSelected = { mission ->
-                        selectedMission = mission // 미션을 선택하고 저장
-                        showSelectDialog = true // 다이얼로그 표시
-                    },
-                    onRefresh = {}
-                )
-            }
+                        // 미션을 카드로 표시 (제목만 표시)
+                        missions.take(3).forEach { mission ->
+                            MissionTitleCard(
+                                mission = mission,
+                                onMissionSelected = {
+                                    selectedMission = mission
+                                    showMissionDetailDialog = true
 
-            // AlertDialog 추가
-            if (showSelectDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSelectDialog = false },
-                    title = { Text("선택 하시겠습니까?") },
-                    text = { Text("이 미션을 선택하시겠습니까?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            // "예" 버튼을 눌렀을 때만 다음 화면으로 이동
-                            selectedMission?.let {
-                                val encodedMissionTitle = URLEncoder.encode(it, StandardCharsets.UTF_8.toString())
-                                navController.navigate("mission_detail/$encodedMissionTitle") {
-                                    popUpTo("mission_screen") { inclusive = true }
                                 }
-                            }
-                            showSelectDialog = false // 다이얼로그 닫기
-                        }) {
-                            Text("예")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            showSelectDialog = false // 다이얼로그 닫기
-                        }) {
-                            Text("아니요")
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
-                )
+                    is UiState.Error -> {
+                        Text("오류: ${(uiState as UiState.Error).message}")
+                        Button(
+                            onClick = {
+                                viewModel.createMissions() // 오류 시에도 다시 시도할 수 있도록 버튼 추가
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC0CB)),
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        ) {
+                            Text("다시 시도")
+                        }
+                    }
+                }
+
+                // 미션 생성하기 버튼 추가 (미션 카드보다 아래 위치)
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = {
+                        viewModel.createMissions() // 새 미션 생성 요청
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC0CB)),
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Text("새 미션 생성하기")
+                }
+
+                // 선택된 미션의 세부 사항을 보여주는 AlertDialog
+                if (showMissionDetailDialog && selectedMission != null) {
+                    AlertDialog(
+                        onDismissRequest = { showMissionDetailDialog = false },
+                        title = { Text(selectedMission?.title ?: "") },
+                        text = {
+                            Column {
+                                Text("장소: ${selectedMission?.location ?: "정보 없음"}")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("설명: ${selectedMission?.description ?: "정보 없음"}")
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showMissionDetailDialog = false }) {
+                                Text("확인")
+                            }
+                        }
+                    )
+                }
             }
-
         }
-    }
+    )
 }
-
-
-@Serializable
-data class Mission(
-    val title: String,
-    val location: String,
-    val description: String
-)
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,85 +199,90 @@ fun MissionTopAppBar(
                 )
                 Spacer(modifier = Modifier.width(16.dp))
 
+// <<<<<<< main
 
+
+// @Composable
+// fun MissionSelectionCard(
+//     missions: List<String>,
+//     missionDetails: Map<String, Pair<String, String>>, // 미션별 위치와 설명 정보
+//     refreshCount: Int,
+//     remainingTime: Int,
+//     onMissionSelected: (String) -> Unit,
+//     onRefresh: () -> Unit
+// ) {
+//     Row(
+//         modifier = Modifier.fillMaxWidth(),
+//         horizontalArrangement = Arrangement.Start // Row 내에서 왼쪽 정렬
+//     ) {
+//         IconButton(
+//             onClick = { /* 버튼 클릭 시 실행할 동작 */ },
+//             modifier = Modifier
+//                 .size(50.dp) // 버튼 크기
+//                 .padding(bottom = 18.dp) // 미션 선택 텍스트와의 간격 조정
+//         ) {
+//             Icon(
+//                 painter = painterResource(id = R.drawable.ic_currentmisson), // 미션 보관함 아이콘
+//                 contentDescription = "Kakao Icon",
+//                 modifier = Modifier.fillMaxSize(),
+//                 tint = Color.Unspecified // 아이콘 색상을 원본 그대로 사용
+//             )
+//         }
+//     }
+
+//         // 미션 선택 텍스트
+//         Text(text = "미션 선택", style = MaterialTheme.typography.headlineSmall)
+//         Spacer(modifier = Modifier.height(16.dp))
+
+//         // 각 미션을 Card로 감싸서 표시
+//         missions.forEach { mission ->
+//             MissionCard(
+//                 mission = mission,
+//                 onMissionSelected = onMissionSelected
+//             )
+//             Spacer(modifier = Modifier.height(16.dp))
+//         }
+//     }
+// }
+
+
+//     }
+
+
+// =======
+                // 유저 정보 표시
+                UserInfo(userName = userName, points = points) {
+                    navController.navigate("profile_screen")
+                }
+            }
+        }
+    )
+}
 
 @Composable
-fun MissionSelectionCard(
-    missions: List<String>,
-    missionDetails: Map<String, Pair<String, String>>, // 미션별 위치와 설명 정보
-    refreshCount: Int,
-    remainingTime: Int,
-    onMissionSelected: (String) -> Unit,
-    onRefresh: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start // Row 내에서 왼쪽 정렬
-    ) {
-        IconButton(
-            onClick = { /* 버튼 클릭 시 실행할 동작 */ },
-            modifier = Modifier
-                .size(50.dp) // 버튼 크기
-                .padding(bottom = 18.dp) // 미션 선택 텍스트와의 간격 조정
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_currentmisson), // 미션 보관함 아이콘
-                contentDescription = "Kakao Icon",
-                modifier = Modifier.fillMaxSize(),
-                tint = Color.Unspecified // 아이콘 색상을 원본 그대로 사용
-            )
-        }
-    }
-
-        // 미션 선택 텍스트
-        Text(text = "미션 선택", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 각 미션을 Card로 감싸서 표시
-        missions.forEach { mission ->
-            MissionCard(
-                mission = mission,
-                onMissionSelected = onMissionSelected
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+fun UserInfo(userName: String, points: Int, onProfileClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.clickable { onProfileClick() }
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = "포인트: $points",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
 
-        // 새로고침 버튼 (주석 처리된 부분은 필요에 따라 활성화)
-        // Button(
-        //     onClick = onRefresh,
-        //     enabled = refreshCount > 0,
-        //     modifier = Modifier
-        //         .size(50.dp)
-        //         .align(Alignment.CenterHorizontally),
-        //     colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
-        // ) {
-        //     Icon(
-        //         painter = painterResource(id = R.drawable.ic_refresh),
-        //         contentDescription = "새로고침",
-        //         tint = Color.White
-        //     )
-        // }
-        // Spacer(modifier = Modifier.height(4.dp))
-        // if (refreshCount < 3) {
-        //     Text(
-        //         text = "남은 새로고침 횟수: $refreshCount (타이머: ${remainingTime / 60}분 ${remainingTime % 60}초)",
-        //         style = MaterialTheme.typography.bodyMedium
-        //     )
-        // }
-
-    }
-
-
-
 @Composable
-fun MissionCard(
+fun MissionTitleCard(
     mission: Mission,
-    navController: NavController,
     onMissionSelected: () -> Unit
-
 ) {
     var showDialog by remember { mutableStateOf(false) } // 다이얼로그 표시 상태
 
@@ -244,6 +291,7 @@ fun MissionCard(
         modifier = Modifier
             .fillMaxWidth()
 
+
             .height(120.dp) // 세로 크기를 더 키움
 
             .clickable {
@@ -251,6 +299,10 @@ fun MissionCard(
 
             }
             .border(1.dp, Color(0xFFC0B38B), shape = RoundedCornerShape(8.dp)) // 모서리가 둥근 테두리 추가
+// =======
+//             .height(100.dp)
+//             .clickable { onMissionSelected() }
+// >>>>>>> seung
             .padding(vertical = 4.dp),
 
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F1E4)), // 부드러운 색상
@@ -263,79 +315,88 @@ fun MissionCard(
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            // 텍스트를 가운데 정렬
+// <<<<<<< main
+//             // 텍스트를 가운데 정렬
+//             Text(
+//                 text = mission,
+//                 fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.8f, // 크기를 1.5배 줄임
+//                 color = Color(0xFF6D4C41),
+//                 modifier = Modifier.weight(1f) // 텍스트를 중앙에 배치하도록 가변 공간 할당
+//             )
+
+//             // 미션이 "상남자/상여자 되기"일 때만 아이콘을 표시
+//             if (mission == "상남자/상여자 되기") {
+//                 Spacer(modifier = Modifier.width(3.dp)) // 텍스트와 아이콘 사이 간격
+//                 Image(
+//                     painter = painterResource(id = R.drawable.ic_bush),
+//                     contentDescription = "Bush Icon",
+//                     modifier = Modifier
+//                         .size(86.dp) // 아이콘 크기 조절
+//                         .clickable { showDialog = true } // 이미지 클릭 시 다이얼로그 표시
+//                 )
+//             }
+//         }
+
+
+//         if (showDialog) {
+//             AlertDialog(
+//                 onDismissRequest = { showDialog = false }, // 다이얼로그 닫기
+//                 title = {
+//                     Row(
+//                         modifier = Modifier.fillMaxWidth(),
+//                         horizontalArrangement = Arrangement.SpaceBetween // 제목과 버튼을 양 끝으로 배치
+//                     ) {
+//                         Text(text = "상남자/상여자 되기")
+//                         IconButton(onClick = { showDialog = false }) {
+//                             // ic_delete.png 이미지로 버튼을 설정
+//                             Icon(
+//                                 painter = painterResource(id = R.drawable.ic_delete), // ic_delete.png
+//                                 contentDescription = "Delete Icon",
+//                                 modifier = Modifier.size(24.dp), // 아이콘 크기 조정
+//                                 tint = Color.Unspecified // 원본 이미지 색을 그대로 사용
+//                             )
+//                         }
+//                     }
+//                 },
+//                 text = { Text("미션을 통해 1그루의 나무를 심은 것 같은 작은 변화를 만들어보세요!") },
+//                 confirmButton = {},
+//                 modifier = Modifier
+//                     .size(4000.dp * 8 / 7, 1000.dp * 6 / 10) // 가로를 8/7 비율로 설정하고 세로는 6/10 비율로 설정
+//                     .border(1.dp, Color.Black, shape = RoundedCornerShape(16.dp)) // 둥근 모서리 추가
+//                     .padding(0.dp), // padding을 0으로 설정하여 테두리 안쪽 간격 제거
+//                 containerColor = Color.White // 다이얼로그 배경을 흰색으로 설정
+//             )
+//         }
+
+
+
+
+//         Box(
+//             contentAlignment = Alignment.Center,
+
+//             modifier = Modifier
+//                 .fillMaxSize()
+//                 .padding(8.dp)
+//         ) {
+//             Text(
+
+//                 text = mission,
+//                 fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.8f, // 크기를 1.5배 줄임
+//                 color = Color(0xFF6D4C41)
+
+//             )
+//             Text(
+//                 text = "${mission.location} - ${mission.description}",
+//                 style = MaterialTheme.typography.bodyMedium,
+//                 color = Color.Gray
+// =======
+            // 미션 제목만 표시
             Text(
-                text = mission,
-                fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.8f, // 크기를 1.5배 줄임
+                text = mission.title,
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xFF6D4C41),
-                modifier = Modifier.weight(1f) // 텍스트를 중앙에 배치하도록 가변 공간 할당
-            )
+                modifier = Modifier.align(Alignment.CenterHorizontally)
 
-            // 미션이 "상남자/상여자 되기"일 때만 아이콘을 표시
-            if (mission == "상남자/상여자 되기") {
-                Spacer(modifier = Modifier.width(3.dp)) // 텍스트와 아이콘 사이 간격
-                Image(
-                    painter = painterResource(id = R.drawable.ic_bush),
-                    contentDescription = "Bush Icon",
-                    modifier = Modifier
-                        .size(86.dp) // 아이콘 크기 조절
-                        .clickable { showDialog = true } // 이미지 클릭 시 다이얼로그 표시
-                )
-            }
-        }
-
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false }, // 다이얼로그 닫기
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween // 제목과 버튼을 양 끝으로 배치
-                    ) {
-                        Text(text = "상남자/상여자 되기")
-                        IconButton(onClick = { showDialog = false }) {
-                            // ic_delete.png 이미지로 버튼을 설정
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_delete), // ic_delete.png
-                                contentDescription = "Delete Icon",
-                                modifier = Modifier.size(24.dp), // 아이콘 크기 조정
-                                tint = Color.Unspecified // 원본 이미지 색을 그대로 사용
-                            )
-                        }
-                    }
-                },
-                text = { Text("미션을 통해 1그루의 나무를 심은 것 같은 작은 변화를 만들어보세요!") },
-                confirmButton = {},
-                modifier = Modifier
-                    .size(4000.dp * 8 / 7, 1000.dp * 6 / 10) // 가로를 8/7 비율로 설정하고 세로는 6/10 비율로 설정
-                    .border(1.dp, Color.Black, shape = RoundedCornerShape(16.dp)) // 둥근 모서리 추가
-                    .padding(0.dp), // padding을 0으로 설정하여 테두리 안쪽 간격 제거
-                containerColor = Color.White // 다이얼로그 배경을 흰색으로 설정
-            )
-        }
-
-
-
-
-        Box(
-            contentAlignment = Alignment.Center,
-
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)
-        ) {
-            Text(
-
-                text = mission,
-                fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.8f, // 크기를 1.5배 줄임
-                color = Color(0xFF6D4C41)
-
-            )
-            Text(
-                text = "${mission.location} - ${mission.description}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
             )
         }
     }
@@ -344,6 +405,7 @@ fun MissionCard(
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     var selectedItem by remember { mutableStateOf("home") }
+
 
 
     NavigationBar(
@@ -444,6 +506,14 @@ fun BottomNavigationBar(navController: NavController) {
                 navController.navigate("home_screen")
             }
 
+// =======
+//     NavigationBar(containerColor = Color(0xFFEAD9C9)) {
+//         val items = listOf(
+//             NavBarItem("Home", R.drawable.ic_home, "mission_screen"),
+//             NavBarItem("Garden", R.drawable.ic_garden, "garden_screen"),
+//             NavBarItem("Shop", R.drawable.ic_shop, "shop_screen"),
+//             NavBarItem("Other", R.drawable.ic_other, "home_screen")
+// >>>>>>> seung
         )
 
         items.forEach { item ->
@@ -467,4 +537,3 @@ fun BottomNavigationBar(navController: NavController) {
 }
 
 data class NavBarItem(val label: String, val iconRes: Int, val route: String)
-

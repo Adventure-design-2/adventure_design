@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,7 +18,6 @@ class MainActivity : ComponentActivity() {
     // MissionViewModel을 생성합니다.
     private val missionViewModel: MissionViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -48,6 +48,9 @@ class MainActivity : ComponentActivity() {
                     composable("shop_screen") {
                         ShopScreen(navController = navController)
                     }
+//                    composable("diary_screen") {
+//                        DiaryScreen(navController = navController)
+//                    }
                     composable("signup_screen") {
                         SignUpScreen(navController = navController)
                     }
@@ -58,16 +61,28 @@ class MainActivity : ComponentActivity() {
                         VerificationScreen(navController = navController)
                     }
                     composable(
-                        route = "mission_detail/{missionTitle}",
+                        route = "mission_detail/{missionTitle}/{missionDescription}/{missionLocation}",
                         arguments = listOf(
-                            navArgument("missionTitle") { defaultValue = "" }
+                            navArgument("missionTitle") { type = NavType.StringType },
+                            navArgument("missionDescription") { type = NavType.StringType },
+                            navArgument("missionLocation") { type = NavType.StringType }
                         )
                     ) { backStackEntry ->
                         val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
-                        MissionDetailScreen(navController = navController, missionTitle = missionTitle)
+                        val missionDescription = backStackEntry.arguments?.getString("missionDescription") ?: ""
+                        val missionLocation = backStackEntry.arguments?.getString("missionLocation") ?: ""
+                        MissionDetailScreen(
+                            navController = navController,
+                            missionTitle = missionTitle,
+                            missionDescription = missionDescription,
+                            missionLocation = missionLocation
+                        )
                     }
 
+
+
                 }
+
             }
         }
     }

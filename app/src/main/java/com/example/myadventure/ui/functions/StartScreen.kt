@@ -17,9 +17,17 @@ fun StartScreen(navController: NavController) {
 
     // 일정 시간 후 다음 화면으로 자동 이동
     LaunchedEffect(Unit) {
-//        delay(100) // 2초 딜레이
-        navController.navigate("signup_screen") {
-            popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
+
+        delay(2000) // 2초 대기 후
+        navigateToNextScreen = true
+    }
+
+    // navigateToNextScreen이 true일 때 signup_screen으로 이동
+    LaunchedEffect(navigateToNextScreen) {
+        if (navigateToNextScreen) {
+            navController.navigate("signup_screen") {
+                popUpTo("start_screen") { inclusive = true } // 현재 화면을 스택에서 제거
+            }
 
         }
     }

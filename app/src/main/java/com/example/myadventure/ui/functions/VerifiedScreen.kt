@@ -243,6 +243,7 @@ fun VerificationScreen(navController: NavController) {
             }
 
 
+
             // 코멘트 등록 팝업
             if (showCommentRegisteredDialog) {
                 AlertDialog(
@@ -282,6 +283,7 @@ fun VerificationScreen(navController: NavController) {
                     }
                 )
             }
+
 
         }
     )

@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                     composable("home_screen") {
                         HomeScreen(navController = navController)
                     }
-                    composable("mission_screen") {
+                    composable("Missionscreen") {
                         // MissionScreen에 MissionViewModel을 전달합니다.
                         MissionScreen(navController = navController, viewModel = missionViewModel)
                     }
@@ -57,12 +57,22 @@ class MainActivity : ComponentActivity() {
                     composable("verification_screen") {
                         VerificationScreen(navController = navController)
                     }
+                    composable("CouplecodeScreen") {
+                        CouplecodeScreen(navController = navController)
+                    }
+                    composable("MainScreen") {
+                        MainScreen(navController = navController)
+                    }
+                    composable("DDayScreen") {
+                        DDayScreen(navController = navController)
+                    }
                     composable(
                         route = "mission_detail/{missionTitle}",
                         arguments = listOf(
                             navArgument("missionTitle") { defaultValue = "" }
                         )
-                    ) { backStackEntry ->
+                    )
+                    { backStackEntry ->
                         val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
                         MissionDetailScreen(navController = navController, missionTitle = missionTitle)
                     }

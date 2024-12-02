@@ -227,7 +227,7 @@ fun MissionSelectionCard(
         // }
 
     }
-
+}
 
 
 @Composable

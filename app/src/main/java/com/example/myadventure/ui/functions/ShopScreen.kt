@@ -68,9 +68,6 @@ fun ShopScreen(navController: NavController) {
                 }
             )
         },
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { padding ->
             Column(

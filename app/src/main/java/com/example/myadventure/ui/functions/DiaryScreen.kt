@@ -21,6 +21,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 
 
 @Composable
@@ -117,4 +118,11 @@ fun DiaryEntryCard(entry: DiaryEntry) {
             }
         }
     }
+}
+
+
+@Preview
+@Composable
+fun PreviewDiaryScreen(){
+    DiaryScreens(navController = NavController(LocalContext.current))
 }

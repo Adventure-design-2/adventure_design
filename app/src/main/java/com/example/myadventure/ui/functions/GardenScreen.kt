@@ -28,9 +28,6 @@ fun GardenScreen(navController: NavController) {
     var showCapsuleIcon by remember { mutableStateOf(false) }
 
     Scaffold(
-        bottomBar = { // 하단바 추가
-            BottomNavigationBar(navController = navController)
-        },
         containerColor = Color(0xFFF2E4DA),
         topBar = {
             TopAppBar(

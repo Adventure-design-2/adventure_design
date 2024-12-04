@@ -13,11 +13,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,12 +51,12 @@ fun MainScreen(navController: NavController) {
                 fontWeight = FontWeight.Bold
             )
 
-            // 요정 이미지
+            // 캐릭터 이미지
             Image(
-                painter = painterResource(id = R.drawable.ic_character_ex), // 리소스 이미지 이름
+                painter = painterResource(id = R.drawable.ic_char_main), // 리소스 이미지 이름
                 contentDescription = "character",
                 modifier = Modifier
-                    .size(200.dp)
+                    .size(400.dp)
                     .padding(16.dp)
             )
 
@@ -116,3 +118,4 @@ fun AppNavigation() {
         composable("MissionScreen") { MissionScreen(navController) }
     }
 }
+

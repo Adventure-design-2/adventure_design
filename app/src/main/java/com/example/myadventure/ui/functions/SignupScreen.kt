@@ -48,13 +48,13 @@ fun SignUpScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2E4DA))
+            .background(Color(0xFFFFF5F8))
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.applogo),
+            painter = painterResource(id = R.drawable.ic_app_logo2_1),
             contentDescription = "Logo",
             modifier = Modifier.size(170.dp)
         )
@@ -64,7 +64,7 @@ fun SignUpScreen(navController: NavController) {
         // Tab Row for switching between Login and Sign up
         TabRow(
             selectedTabIndex = if (selectedTab == "Sign up") 1 else 0,
-            containerColor = Color(0xFFF2E4DA)
+            containerColor = Color(0xFFFFF5F8)
         ) {
             Tab(
                 selected = selectedTab == "Log in",

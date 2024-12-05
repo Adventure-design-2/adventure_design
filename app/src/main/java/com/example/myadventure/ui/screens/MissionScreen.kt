@@ -3,32 +3,10 @@ package com.example.myadventure.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +19,7 @@ import androidx.navigation.NavHostController
 import com.example.myadventure.Mission
 import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -54,108 +33,142 @@ fun MissionScreen(
     var showSecondDialog by remember { mutableStateOf(false) }
     var selectedMission by remember { mutableStateOf<String?>(null) }
 
+    // 이미지 전환을 위한 상태
+    var currentImage by remember { mutableStateOf(R.drawable.mission_char) }
+
+    // 1초 간격으로 이미지를 전환하는 효과
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentImage = if (currentImage == R.drawable.mission_char) {
+                R.drawable.mission_char_1
+            } else {
+                R.drawable.mission_char
+            }
+            delay(1000) // 1초 지연
+        }
+    }
+
     Scaffold(
         containerColor = Color(0x5EFFC1E3),
         bottomBar = {
+            // 하단 네비게이션 바
             BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(16.dp)
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                MissionSelectionCard(
-                    missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
-                    missionDetails = mapOf(
-                        "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
-                        "고요한 저녁 미션!" to ("산" to "산책하기"),
-                        "실내 활동 미션 1" to ("집" to "정리정돈")
-                    ),
-                    refreshCount = 3,
-                    remainingTime = 300,
-                    onMissionSelected = { mission ->
-                        selectedMission = mission
-                        showSelectDialog = true
-                    },
-                    onRefresh = {}
-                )
-            }
+                // 메인 콘텐츠
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    MissionSelectionCard(
+                        missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
+                        missionDetails = mapOf(
+                            "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
+                            "고요한 저녁 미션!" to ("산" to "산책하기"),
+                            "실내 활동 미션 1" to ("집" to "정리정돈")
+                        ),
+                        refreshCount = 3,
+                        remainingTime = 300,
+                        onMissionSelected = { mission ->
+                            selectedMission = mission
+                            showSelectDialog = true
+                        },
+                        onRefresh = {}
+                    )
+                }
 
-            if (showSelectDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSelectDialog = false },
-                    title = { Text("선택 하시겠습니까?") },
-                    text = { Text("이 미션을 선택하시겠습니까?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showSelectDialog = false
-                            showSecondDialog = true
-                        }) {
-                            Text("예")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showSelectDialog = false }) {
-                            Text("아니요")
-                        }
-                    }
+                // 화면 오른쪽 아래에서 1초 간격으로 전환되는 캐릭터 이미지
+                Image(
+                    painter = painterResource(id = currentImage),
+                    contentDescription = "Mission Character",
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .size(170.dp) // 캐릭터 크기 조절
                 )
-            }
 
-            if (showSecondDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSecondDialog = false },
-                    title = {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.height(48.dp))
-                            Text(
-                                "상남자/상여자 되기 미션!",
-                                color = Color(0xFFF776CC)
-                            )
-                            IconButton(
-                                onClick = { showSecondDialog = false },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_delete),
-                                    contentDescription = "닫기",
-                                    tint = Color.Unspecified
+                if (showSelectDialog) {
+                    // 미션 선택 다이얼로그
+                    AlertDialog(
+                        onDismissRequest = { showSelectDialog = false },
+                        title = { Text("선택 하시겠습니까?") },
+                        text = { Text("이 미션을 선택하시겠습니까?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showSelectDialog = false
+                                showSecondDialog = true
+                            }) {
+                                Text("예")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showSelectDialog = false }) {
+                                Text("아니요")
+                            }
+                        }
+                    )
+                }
+
+                if (showSecondDialog) {
+                    // 두 번째 다이얼로그
+                    AlertDialog(
+                        onDismissRequest = { showSecondDialog = false },
+                        title = {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Spacer(modifier = Modifier.height(48.dp))
+                                Text(
+                                    "상남자/상여자 되기 미션!",
+                                    color = Color(0xFFF776CC)
+                                )
+                                IconButton(
+                                    onClick = { showSecondDialog = false },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_delete),
+                                        contentDescription = "닫기",
+                                        tint = Color.Unspecified
+                                    )
+                                }
+                            }
+                        },
+                        text = {
+                            Column(modifier = Modifier.padding(top = 56.dp)) {
+                                Text(
+                                    "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
+                                            "빨대 없이 진지하게 한 모금, \n" +
+                                            "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
+                                            "가볍게 도전하며 즐거운 \n" +
+                                            "데이트를 만들어보세요!"
                                 )
                             }
-                        }
-                    },
-                    text = {
-                        Column(modifier = Modifier.padding(top = 56.dp)) {
-                            Text(
-                                "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
-                                        "빨대 없이 진지하게 한 모금, \n" +
-                                        "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
-                                        "가볍게 도전하며 즐거운 \n" +
-                                        "데이트를 만들어보세요!"
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        Column(modifier = Modifier.padding(top = 32.dp)) {
-                            TextButton(onClick = {
-                                navController.navigate("find_date_location") {
-                                    popUpTo("mission_screen") { inclusive = true }
+                        },
+                        confirmButton = {
+                            Column(modifier = Modifier.padding(top = 32.dp)) {
+                                TextButton(onClick = {
+                                    navController.navigate("find_date_location") {
+                                        popUpTo("mission_screen") { inclusive = true }
+                                    }
+                                    showSecondDialog = false
+                                }) {
+                                    Text("데이트 장소 찾으러 가기")
                                 }
-                                showSecondDialog = false
-                            }) {
-                                Text("데이트 장소 찾으러 가기")
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(600.dp)
-                )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(600.dp)
+                    )
+                }
             }
         }
     )
@@ -216,8 +229,8 @@ fun MissionCard(
             .clickable { onMissionSelected() },
         colors = CardDefaults.cardColors(containerColor = Color(0x59CFC3CE)),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(0.0001.dp), // 옅은 그림자 효과
-        border = BorderStroke(1.dp, Color(0xFFCFC3CE)) // 테두리 추가
+        elevation = CardDefaults.cardElevation(0.0001.dp),
+        border = BorderStroke(1.dp, Color(0xFFCFC3CE))
     ) {
         Row(
             modifier = Modifier
@@ -252,6 +265,6 @@ fun MissionCard(
 
 @Preview
 @Composable
-fun MissionScreen(){
+fun MissionScreenPreview() {
     MissionScreen(navController = NavController(LocalContext.current))
 }

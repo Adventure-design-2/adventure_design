@@ -35,9 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,12 +56,12 @@ fun SignUpScreen(navController: NavController) {
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.ic_app_logo2_1),
+            painter = painterResource(id = R.drawable.app_logo4_1),
             contentDescription = "Logo",
             modifier = Modifier.size(170.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(70.dp))
 
         // Tab Row for switching between Login and Sign up
         TabRow(

@@ -1,10 +1,28 @@
 package com.example.myadventure.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,9 +43,7 @@ fun MissionScreen(
     navController: NavHostController,
     repository: MissionRepository
 ) {
-    // 추천 미션 3개를 가져옴
     val recommendedMissions = remember { repository.getRecommendedMissions() }
-
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
     var selectedMission by remember { mutableStateOf<Mission?>(null) }
@@ -45,24 +61,21 @@ fun MissionScreen(
                     .padding(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
                     missions = recommendedMissions,
                     onMissionSelected = { mission ->
                         selectedMission = mission
                         showSelectDialog = true
-                    },
-                    onRefresh = {
-                        // 리프레시 기능 (현재 비활성화)
                     }
                 )
             }
 
-            // 첫 번째 다이얼로그
-            if (showSelectDialog && selectedMission != null) {
+            if (showSelectDialog) {
                 AlertDialog(
                     onDismissRequest = { showSelectDialog = false },
                     title = { Text("선택 하시겠습니까?") },
-                    text = { Text("미션 '${selectedMission?.title}'을 선택하시겠습니까?") },
+                    text = { Text("이 미션을 선택하시겠습니까?") },
                     confirmButton = {
                         TextButton(onClick = {
                             showSelectDialog = false
@@ -79,42 +92,67 @@ fun MissionScreen(
                 )
             }
 
-            // 두 번째 다이얼로그
-            if (showSecondDialog && selectedMission != null) {
+            if (showSecondDialog) {
                 AlertDialog(
                     onDismissRequest = { showSecondDialog = false },
                     title = {
-                        Text(
-                            text = selectedMission?.title ?: "",
-                            color = Color(0xFFF776CC)
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Spacer(modifier = Modifier.height(48.dp))
+                            Text(
+                                "상남자/상여자 되기 미션!",
+                                color = Color(0xFFF776CC)
+                            )
+                            IconButton(
+                                onClick = { showSecondDialog = false },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_delete),
+                                    contentDescription = "닫기",
+                                    tint = Color.Unspecified
+                                )
+                            }
+                        }
                     },
                     text = {
-                        Text(
-                            text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
-                        )
+                        Column(modifier = Modifier.padding(top = 56.dp)) {
+                            Text(
+                                "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
+                                        "빨대 없이 진지하게 한 모금, \n" +
+                                        "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
+                                        "가볍게 도전하며 즐거운 \n" +
+                                        "데이트를 만들어보세요!"
+                            )
+                        }
                     },
                     confirmButton = {
-                        TextButton(onClick = {
-                            navController.navigate("find_date_location") {
-                                popUpTo("mission_screen") { inclusive = true }
+                        Column(modifier = Modifier.padding(top = 32.dp)) {
+                            TextButton(onClick = {
+                                navController.navigate("find_date_location") {
+                                    popUpTo("mission_screen") { inclusive = true }
+                                }
+                                showSecondDialog = false
+                            }) {
+                                Text("데이트 장소 찾으러 가기")
                             }
-                            showSecondDialog = false
-                        }) {
-                            Text("데이트 장소 찾으러 가기")
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(600.dp)
                 )
             }
         }
     )
 }
 
+
 @Composable
 fun MissionSelectionCard(
     missions: List<Mission>,
-    onMissionSelected: (Mission) -> Unit,
-    onRefresh: () -> Unit
+    onMissionSelected: (Mission) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -126,7 +164,6 @@ fun MissionSelectionCard(
         missions.forEach { mission ->
             MissionCard(
                 mission = mission,
-                navController = null,
                 onMissionSelected = { onMissionSelected(mission) }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -137,10 +174,9 @@ fun MissionSelectionCard(
 @Composable
 fun MissionCard(
     mission: Mission,
-    navController: NavHostController?,
     onMissionSelected: () -> Unit
 ) {
-    val imageCount = mission.environment / 3 // 환경 점수를 이미지 수로 변환
+    val imageCount = mission.environment
 
     Card(
         modifier = Modifier
@@ -149,8 +185,8 @@ fun MissionCard(
             .clickable { onMissionSelected() },
         colors = CardDefaults.cardColors(containerColor = Color(0x59CFC3CE)),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(0.0001.dp),
-        border = BorderStroke(1.dp, Color(0xFFCFC3CE))
+        elevation = CardDefaults.cardElevation(0.0001.dp), // 옅은 그림자 효과
+        border = BorderStroke(1.dp, Color(0xFFCFC3CE)) // 테두리 추가
     ) {
         Row(
             modifier = Modifier
@@ -172,7 +208,11 @@ fun MissionCard(
                     .padding(top = 4.dp, end = 4.dp)
             ) {
                 repeat(imageCount) {
-                    Icon(painter = painterResource(id = R.drawable.ic_bush), contentDescription = "환경 점수 이미지", modifier = Modifier.size(24.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_bush),
+                        contentDescription = "Bush Icon",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }

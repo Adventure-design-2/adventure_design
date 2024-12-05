@@ -13,13 +13,12 @@ class MainActivity : ComponentActivity() {
 
         // MissionRepository를 통해 미션 데이터 로드
         val repository = MissionRepository(this)
-        val missions = repository.loadMissions()
 
         setContent {
             val navController = rememberNavController()
             MissionScreen(
                 navController = navController,
-                missions = missions
+                repository = repository
             )
         }
     }

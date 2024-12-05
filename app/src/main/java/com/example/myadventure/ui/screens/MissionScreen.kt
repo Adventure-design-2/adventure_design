@@ -1,27 +1,33 @@
 package com.example.myadventure.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.myadventure.R
+import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
 
 @Composable
 fun MissionScreen(
     navController: NavHostController,
-    missions: List<Mission>
+    repository: MissionRepository
 ) {
+    // 추천 미션 3개를 가져옴
+    val recommendedMissions = remember { repository.getRecommendedMissions() }
+
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
     var selectedMission by remember { mutableStateOf<Mission?>(null) }
@@ -40,15 +46,18 @@ fun MissionScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
-                    missions = missions,
+                    missions = recommendedMissions,
                     onMissionSelected = { mission ->
                         selectedMission = mission
                         showSelectDialog = true
                     },
-                    onRefresh = {}
+                    onRefresh = {
+                        // 리프레시 기능 (현재 비활성화)
+                    }
                 )
             }
 
+            // 첫 번째 다이얼로그
             if (showSelectDialog && selectedMission != null) {
                 AlertDialog(
                     onDismissRequest = { showSelectDialog = false },
@@ -70,52 +79,31 @@ fun MissionScreen(
                 )
             }
 
+            // 두 번째 다이얼로그
             if (showSecondDialog && selectedMission != null) {
                 AlertDialog(
                     onDismissRequest = { showSecondDialog = false },
                     title = {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = selectedMission?.title ?: "",
-                                color = Color(0xFFF776CC),
-                                modifier = Modifier.align(Alignment.CenterStart)
-                            )
-                            IconButton(
-                                onClick = { showSecondDialog = false },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_delete),
-                                    contentDescription = "닫기",
-                                    tint = Color.Unspecified
-                                )
-                            }
-                        }
+                        Text(
+                            text = selectedMission?.title ?: "",
+                            color = Color(0xFFF776CC)
+                        )
                     },
                     text = {
-                        Column(modifier = Modifier.padding(top = 56.dp)) {
-                            Text(
-                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
-                            )
-                        }
+                        Text(
+                            text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
+                        )
                     },
                     confirmButton = {
-                        Column(modifier = Modifier.padding(top = 32.dp)) {
-                            TextButton(onClick = {
-                                navController.navigate("find_date_location") {
-                                    popUpTo("mission_screen") { inclusive = true }
-                                }
-                                showSecondDialog = false
-                            }) {
-                                Text("데이트 장소 찾으러 가기")
+                        TextButton(onClick = {
+                            navController.navigate("find_date_location") {
+                                popUpTo("mission_screen") { inclusive = true }
                             }
+                            showSecondDialog = false
+                        }) {
+                            Text("데이트 장소 찾으러 가기")
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(600.dp)
+                    }
                 )
             }
         }
@@ -129,7 +117,10 @@ fun MissionSelectionCard(
     onRefresh: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = "은영이와 철구\n" + "D + 85 ❤\n\n", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = "추천 미션",
+            style = MaterialTheme.typography.headlineSmall
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         missions.forEach { mission ->
@@ -146,7 +137,7 @@ fun MissionSelectionCard(
 @Composable
 fun MissionCard(
     mission: Mission,
-    navController: NavController?,
+    navController: NavHostController?,
     onMissionSelected: () -> Unit
 ) {
     val imageCount = mission.environment / 3 // 환경 점수를 이미지 수로 변환
@@ -181,11 +172,7 @@ fun MissionCard(
                     .padding(top = 4.dp, end = 4.dp)
             ) {
                 repeat(imageCount) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_bush),
-                        contentDescription = "Bush Icon",
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(painter = painterResource(id = R.drawable.ic_bush), contentDescription = "환경 점수 이미지", modifier = Modifier.size(24.dp))
                 }
             }
         }

@@ -56,7 +56,7 @@ fun MainScreen(navController: NavController) {
                 painter = painterResource(id = R.drawable.ic_char_main), // 리소스 이미지 이름
                 contentDescription = "character",
                 modifier = Modifier
-                    .size(400.dp)
+                    .size(300.dp)
                     .padding(16.dp)
             )
 
@@ -109,13 +109,9 @@ fun MissionScreen(navController: NavController) {
     }
 }
 
+@Preview
 @Composable
-fun AppNavigation() {
-    val navController = androidx.navigation.compose.rememberNavController()
-
-    NavHost(navController = navController, startDestination = "MainScreen") {
-        composable("MainScreen") { MainScreen(navController) }
-        composable("MissionScreen") { MissionScreen(navController) }
-    }
+fun MainScreen() {
+    val navController = rememberNavController()
+    MainScreen(navController = navController)
 }
-

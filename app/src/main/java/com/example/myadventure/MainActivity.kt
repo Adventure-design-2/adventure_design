@@ -4,18 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.data.MissionRepository
-import com.example.myadventure.ui.screens.CouplecodeScreen
 import com.example.myadventure.ui.screens.MissionScreen
+import com.example.myadventure.ui.screens.RecordUploadScreen
 import com.example.myadventure.ui.screens.SignUpScreen
 import com.example.myadventure.viewmodel.AuthState
 import com.example.myadventure.viewmodel.AuthViewModel
-import com.example.myadventure.viewmodel.InviteViewModel
+import com.example.myadventure.viewmodel.RecordViewModel
+import com.example.myadventure.viewmodel.RecordViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,7 +26,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController: NavHostController = rememberNavController()
             val authViewModel: AuthViewModel = viewModel()
-            val inviteViewModel: InviteViewModel = viewModel()
+            val recordViewModel: RecordViewModel = ViewModelProvider(
+                this,
+                RecordViewModelFactory(applicationContext) // Context 전달
+            )[RecordViewModel::class.java]
+
             val repository = MissionRepository(this)
 
             // 로그인 상태 확인
@@ -38,24 +44,24 @@ class MainActivity : ComponentActivity() {
                         viewModel = authViewModel
                     )
                 }
-                composable("couplecode_screen") {
-                    CouplecodeScreen(
-                        navController = navController,
-                        viewModel = inviteViewModel
-                    )
-                }
                 composable("mission_screen") {
                     MissionScreen(
                         navController = navController,
                         repository = repository
                     )
                 }
+                composable("record_upload_screen") {
+                    RecordUploadScreen(
+                        navController = navController,
+                        viewModel = recordViewModel
+                    )
+                }
             }
 
-            // 로그인 상태에 따라 초기 화면 전환
+            // 로그인 상태에 따라 초기 화면 설정
             when (val authState = authViewModel.authState.collectAsState().value) {
                 is AuthState.Success -> {
-                    navController.navigate("couplecode_screen") {
+                    navController.navigate("mission_screen") {
                         popUpTo("signup_screen") { inclusive = true }
                     }
                 }
@@ -65,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 else -> {
-                    // 로딩 화면 또는 초기 상태 처리
+                    // 로딩 중이거나 초기 상태
                 }
             }
         }

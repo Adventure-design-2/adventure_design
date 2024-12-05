@@ -2,6 +2,7 @@ package com.example.myadventure.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.myadventure.data.LocalStorageManager
 import com.example.myadventure.data.RecordRepository
@@ -36,3 +37,14 @@ class RecordViewModel(private val context: Context) : ViewModel() {
         }
     }
 }
+
+class RecordViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(RecordViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return RecordViewModel(context) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+

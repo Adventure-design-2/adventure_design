@@ -37,6 +37,7 @@ import androidx.navigation.NavHostController
 import com.example.myadventure.R
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
+import com.example.myadventure.viewmodel.AuthViewModel
 
 @Composable
 fun MissionScreen(
@@ -60,6 +61,7 @@ fun MissionScreen(
                     .padding(contentPadding)
                     .padding(16.dp)
             ) {
+                LogoutButton(navController = navController, authViewModel = AuthViewModel())
                 Spacer(modifier = Modifier.height(16.dp))
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(

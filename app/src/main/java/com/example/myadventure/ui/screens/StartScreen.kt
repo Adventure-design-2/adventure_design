@@ -1,15 +1,18 @@
 package com.example.myadventure.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.myadventure.R
+import com.example.myadventure.viewmodel.AuthViewModel
 
 @Composable
 fun StartScreen(navController: NavController) {
@@ -50,7 +53,7 @@ fun StartScreen(navController: NavController) {
 fun BottomNavigationBar(navController: NavController) {
     // 네비게이션 아이템 리스트 정의
     val items = listOf(
-        NavBarItem("Diary", R.drawable.ic_diary, "garden_screen"),
+        NavBarItem("Diary", R.drawable.ic_diary, "diary_screen"),
         NavBarItem("Mission", R.drawable.ic_misson, "mission_screen"),
         // NavBarItem("Shop", R.drawable.ic_shop, "shop_screen"),
         NavBarItem("Other", R.drawable.ic_other, "other_screen")
@@ -83,6 +86,20 @@ fun BottomNavigationBar(navController: NavController) {
     }
 }
 
+@Composable
+fun LogoutButton(navController: NavController, authViewModel: AuthViewModel) {
+    val context = LocalContext.current
+
+    Button(onClick = {
+        authViewModel.logout()
+        Toast.makeText(context, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+        navController.navigate("signup_screen") {
+            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+        }
+    }) {
+        Text("로그아웃")
+    }
+}
 
 // NavBarItem 데이터 클래스 정의
 data class NavBarItem(val label: String, val iconRes: Int, val route: String)

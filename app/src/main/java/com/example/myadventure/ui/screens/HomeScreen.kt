@@ -26,9 +26,6 @@ import com.example.myadventure.ui.screens.card.FeatureCardRow
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
 
-    // 사용자 정보 로드
-
-    // pointsFlow 구독하여 포인트 상태 유지
 
     Scaffold(
         containerColor = Color(0xFFF2E4DA),

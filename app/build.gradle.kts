@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.firebase.auth.ktx.v2211)
     implementation(libs.com.google.firebase.firebase.firestore.ktx)
     implementation(libs.firebase.database.ktx.v2032)
+    implementation(libs.google.play.services.auth)
 
     // Room
     implementation(libs.androidx.room.runtime)

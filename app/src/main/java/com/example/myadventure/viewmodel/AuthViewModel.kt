@@ -3,31 +3,53 @@ package com.example.myadventure.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myadventure.data.AuthManager
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 sealed class AuthState {
-    object Idle : AuthState()
-    object Loading : AuthState()
-    data class Success(val user: FirebaseUser) : AuthState()
+    data object Idle : AuthState()
+    data object Loading : AuthState()
+    data object Success : AuthState()
+    data class Authenticated(val user: FirebaseUser) : AuthState()
+    data object NotAuthenticated : AuthState()
     data class Error(val message: String) : AuthState()
-    object NotAuthenticated : AuthState()
 }
 
 class AuthViewModel : ViewModel() {
-    private val authManager = AuthManager()
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
-    val authState: StateFlow<AuthState> = _authState
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
+    val authState: StateFlow<AuthState> get() = _authState
+
+    init {
+        checkAuthState()
+    }
+
+    // 현재 사용자 상태 확인
+    fun checkAuthState() {
+        viewModelScope.launch {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                _authState.value = AuthState.Authenticated(currentUser)
+            } else {
+                _authState.value = AuthState.NotAuthenticated
+            }
+        }
+    }
+
+    // 이메일과 비밀번호로 로그인
     fun loginWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val user = authManager.loginWithEmail(email, password)
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val user = result.user
                 if (user != null) {
-                    _authState.value = AuthState.Success(user)
+                    _authState.value = AuthState.Authenticated(user)
                 } else {
                     _authState.value = AuthState.Error("Login failed")
                 }
@@ -37,13 +59,15 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    // 이메일과 비밀번호로 회원가입
     fun registerWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val user = authManager.registerWithEmail(email, password)
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                val user = result.user
                 if (user != null) {
-                    _authState.value = AuthState.Success(user)
+                    _authState.value = AuthState.Authenticated(user)
                 } else {
                     _authState.value = AuthState.Error("Registration failed")
                 }
@@ -57,9 +81,10 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
+                val authManager = AuthManager()
                 val user = authManager.firebaseAuthWithGoogle(idToken)
                 if (user != null) {
-                    _authState.value = AuthState.Success(user)
+                    _authState.value = AuthState.Authenticated(user)
                 } else {
                     _authState.value = AuthState.Error("Google Login failed")
                 }
@@ -69,37 +94,16 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun signInWithGoogle(idToken: String) {
-        viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            try {
-                val user = authManager.firebaseAuthWithGoogle(idToken)
-                if (user != null) {
-                    _authState.value = AuthState.Success(user)
-                } else {
-                    _authState.value = AuthState.Error("Google Login failed")
-                }
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Unknown error")
-            }
-        }
-    }
 
-    // 현재 사용자 상태 확인
-    fun checkAuthState() {
-        viewModelScope.launch {
-            val user = authManager.getCurrentUser()
-            if (user != null) {
-                _authState.value = AuthState.Success(user)
-            } else {
-                _authState.value = AuthState.NotAuthenticated
-            }
-        }
-    }
-
-
+    // 로그아웃
     fun logout() {
-        authManager.logout()
-        _authState.value = AuthState.Idle
+        viewModelScope.launch {
+            try {
+                auth.signOut()
+                _authState.value = AuthState.NotAuthenticated
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Logout failed")
+            }
+        }
     }
 }

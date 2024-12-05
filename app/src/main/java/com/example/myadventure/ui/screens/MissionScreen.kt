@@ -3,51 +3,28 @@ package com.example.myadventure.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.myadventure.R
-import kotlinx.serialization.Serializable
+import com.example.myadventure.model.Mission
 
 @Composable
 fun MissionScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    missions: List<Mission>
 ) {
-
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
-    var selectedMission by remember { mutableStateOf<String?>(null) }
+    var selectedMission by remember { mutableStateOf<Mission?>(null) }
 
     Scaffold(
         containerColor = Color(0x5EFFC1E3),
@@ -63,14 +40,7 @@ fun MissionScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 MissionSelectionCard(
-                    missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
-                    missionDetails = mapOf(
-                        "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
-                        "고요한 저녁 미션!" to ("산" to "산책하기"),
-                        "실내 활동 미션 1" to ("집" to "정리정돈")
-                    ),
-                    refreshCount = 3,
-                    remainingTime = 300,
+                    missions = missions,
                     onMissionSelected = { mission ->
                         selectedMission = mission
                         showSelectDialog = true
@@ -79,11 +49,11 @@ fun MissionScreen(
                 )
             }
 
-            if (showSelectDialog) {
+            if (showSelectDialog && selectedMission != null) {
                 AlertDialog(
                     onDismissRequest = { showSelectDialog = false },
                     title = { Text("선택 하시겠습니까?") },
-                    text = { Text("이 미션을 선택하시겠습니까?") },
+                    text = { Text("미션 '${selectedMission?.title}'을 선택하시겠습니까?") },
                     confirmButton = {
                         TextButton(onClick = {
                             showSelectDialog = false
@@ -100,15 +70,15 @@ fun MissionScreen(
                 )
             }
 
-            if (showSecondDialog) {
+            if (showSecondDialog && selectedMission != null) {
                 AlertDialog(
                     onDismissRequest = { showSecondDialog = false },
                     title = {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.height(48.dp))
                             Text(
-                                "상남자/상여자 되기 미션!",
-                                color = Color(0xFFF776CC)
+                                text = selectedMission?.title ?: "",
+                                color = Color(0xFFF776CC),
+                                modifier = Modifier.align(Alignment.CenterStart)
                             )
                             IconButton(
                                 onClick = { showSecondDialog = false },
@@ -127,11 +97,7 @@ fun MissionScreen(
                     text = {
                         Column(modifier = Modifier.padding(top = 56.dp)) {
                             Text(
-                                "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
-                                        "빨대 없이 진지하게 한 모금, \n" +
-                                        "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
-                                        "가볍게 도전하며 즐거운 \n" +
-                                        "데이트를 만들어보세요!"
+                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
                             )
                         }
                     },
@@ -156,20 +122,10 @@ fun MissionScreen(
     )
 }
 
-@Serializable
-data class Mission(
-    val title: String,
-    val location: String,
-    val description: String
-)
-
 @Composable
 fun MissionSelectionCard(
-    missions: List<String>,
-    missionDetails: Map<String, Pair<String, String>>,
-    refreshCount: Int,
-    remainingTime: Int,
-    onMissionSelected: (String) -> Unit,
+    missions: List<Mission>,
+    onMissionSelected: (Mission) -> Unit,
     onRefresh: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -178,11 +134,7 @@ fun MissionSelectionCard(
 
         missions.forEach { mission ->
             MissionCard(
-                mission = Mission(
-                    title = mission,
-                    location = missionDetails[mission]?.first ?: "",
-                    description = missionDetails[mission]?.second ?: ""
-                ),
+                mission = mission,
                 navController = null,
                 onMissionSelected = { onMissionSelected(mission) }
             )
@@ -197,12 +149,7 @@ fun MissionCard(
     navController: NavController?,
     onMissionSelected: () -> Unit
 ) {
-    val imageCount = when (mission.title) {
-        "상남자/상여자 되기" -> 2
-        "고요한 저녁 미션!" -> 1
-        "실내 활동 미션 1" -> 3
-        else -> 0
-    }
+    val imageCount = mission.environment / 3 // 환경 점수를 이미지 수로 변환
 
     Card(
         modifier = Modifier
@@ -211,8 +158,8 @@ fun MissionCard(
             .clickable { onMissionSelected() },
         colors = CardDefaults.cardColors(containerColor = Color(0x59CFC3CE)),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(0.0001.dp), // 옅은 그림자 효과
-        border = BorderStroke(1.dp, Color(0xFFCFC3CE)) // 테두리 추가
+        elevation = CardDefaults.cardElevation(0.0001.dp),
+        border = BorderStroke(1.dp, Color(0xFFCFC3CE))
     ) {
         Row(
             modifier = Modifier
@@ -243,10 +190,4 @@ fun MissionCard(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun MissionPreviewScreen(){
-    MissionScreen(navController = NavController(LocalContext.current))
 }

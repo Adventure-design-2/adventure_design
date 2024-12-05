@@ -17,4 +17,12 @@ class MissionRepository(private val context: Context) {
         val type = object : TypeToken<List<Mission>>() {}.type
         return gson.fromJson(json, type)
     }
+    // 추천 미션 계산 (최대 3개 반환)
+    fun getRecommendedMissions(): List<Mission> {
+        val missions = loadMissions()
+        return missions.sortedWith(
+            compareByDescending<Mission> { it.environment }
+                .thenBy { it.completedCount }
+        ).take(3) // 최대 3개의 미션만 반환
+    }
 }

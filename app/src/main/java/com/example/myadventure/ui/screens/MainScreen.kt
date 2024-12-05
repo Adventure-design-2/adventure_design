@@ -89,27 +89,6 @@ fun MainScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun MissionScreen(navController: NavController) {
-    // MissionScreen UI 정의
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF0F8FF)), // 연한 하늘색 배경
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "미션 화면입니다!",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-    }
-}
 
-@Preview
-@Composable
-fun MainScreen() {
-    val navController = rememberNavController()
-    MainScreen(navController = navController)
-}
+
+

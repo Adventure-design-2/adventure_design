@@ -7,8 +7,11 @@ comGoogleFirebaseCrashlyticsGradlePlugin = "3.0.2"
 datastorePreferences = "1.1.1"
 firebaseAuth = "23.1.0"
 firebaseAuthKtx = "23.1.0"
+firebaseAuthKtxVersion = "22.1.1"
 firebaseAuthVersion = "23.1.0"
 firebaseBom = "33.5.1"
+firebaseDatabaseKtxVersion = "20.3.2"
+firebaseFirestoreKtx = "25.0.3"
 googleCloudVertexaiVersion = "1.3.0"
 googleServices = "4.4.2"
 googleServicesVersion = "4.4.2"
@@ -53,6 +56,7 @@ lifecycleRuntimeCompose = "2.9.0-alpha07"
 ui = "1.8.0-alpha06"
 material = "1.8.0-alpha06"
 materialIconsCoreAndroid = "1.7.5"
+firebaseDatabaseKtx = "21.0.0"
 
 
 [libraries]
@@ -75,12 +79,15 @@ cloud-google-cloud-vertexai = { module = "com.google.cloud:google-cloud-vertexai
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 com-google-firebase-crashlytics-gradle-plugin = { module = "com.google.firebase.crashlytics:com.google.firebase.crashlytics.gradle.plugin", version.ref = "comGoogleFirebaseCrashlyticsGradlePlugin" }
 com-google-firebase-firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
+com-google-firebase-firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-auth-ktx-v2211 = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtxVersion" }
 firebase-auth-v2200 = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuthVersion" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-database-ktx-v2032 = { module = "com.google.firebase:firebase-database-ktx", version.ref = "firebaseDatabaseKtxVersion" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-storage-ktx = { module = "com.google.firebase:firebase-storage-ktx" }
 firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }
@@ -126,6 +133,7 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "kotlinxSerialization" }
 androidx-material-icons-core-android = { group = "androidx.compose.material", name = "material-icons-core-android", version.ref = "materialIconsCoreAndroid" }
+firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 
 
 

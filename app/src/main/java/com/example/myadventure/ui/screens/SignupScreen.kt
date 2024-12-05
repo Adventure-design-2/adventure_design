@@ -4,6 +4,7 @@ package com.example.myadventure.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +28,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,12 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myadventure.R
+import com.example.myadventure.viewmodel.AuthState
+import com.example.myadventure.viewmodel.AuthViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
     var selectedTab by remember { mutableStateOf("Sign up") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,15 +84,15 @@ fun SignUpScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         if (selectedTab == "Sign up") {
-            SignUpContent(navController)
+            SignUpContent(navController, viewModel)
         } else {
-            LoginContent(navController)
+            LoginContent(navController, viewModel)
         }
     }
 }
 
 @Composable
-fun SignUpContent(navController: NavController) {
+fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -107,14 +110,28 @@ fun SignUpContent(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
             Text("or", modifier = Modifier.padding(horizontal = 8.dp))
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        SocialMediaIcons()
+        SocialMediaIcons(
+            onGoogleSignIn = {
+                viewModel.signInWithGoogle("YOUR_WEB_CLIENT_ID") { success, message ->
+                    if (success) {
+                        Toast.makeText(context, "Google 회원가입 성공!", Toast.LENGTH_SHORT).show()
+                        navController.navigate("mission_screen") {
+                            popUpTo("signup_screen") { inclusive = true }
+                        }
+                    } else {
+                        Toast.makeText(context, "Google 회원가입 실패: $message", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        )
+
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -139,7 +156,7 @@ fun SignUpContent(navController: NavController) {
 }
 
 @Composable
-fun LoginContent(navController: NavController) {
+fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -149,13 +166,13 @@ fun LoginContent(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("이전에 애플 로그인을 하셨습니다.", fontSize = 14.sp, color = Color.Gray)
-
+        // 이메일 및 비밀번호 입력
         TextFieldWithCloseIcon("Email", email) { email = it }
         TextFieldWithCloseIcon("Password", password) { password = it }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // 비밀번호 재설정
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -165,26 +182,41 @@ fun LoginContent(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 소셜 로그인 구분선
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
             Text("or", modifier = Modifier.padding(horizontal = 8.dp))
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        SocialMediaIcons()
+        // 소셜 로그인 아이콘 (Google 로그인 추가)
+        SocialMediaIcons(
+            onGoogleSignIn = {
+                // Google 로그인 호출
+                viewModel.signInWithGoogle("YOUR_WEB_CLIENT_ID") { success, message ->
+                    if (success) {
+                        Toast.makeText(context, "Google 로그인 성공!", Toast.LENGTH_SHORT).show()
+                        navController.navigate("CouplecodeScreen") {
+                            popUpTo("auth_screen") { inclusive = true }
+                        }
+                    } else {
+                        Toast.makeText(context, "Google 로그인 실패: $message", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // 로그인 버튼 (일반 이메일 로그인)
         Button(
             onClick = {
-                // 로그인 성공 메시지 Toast로 표시
-                Toast.makeText(context, "로그인에 성공했습니다.", Toast.LENGTH_SHORT).show()
-
-                // 다음 화면으로 이동
-                navController.navigate("CouplecodeScreen") {
-                    popUpTo("auth_screen") { inclusive = true }
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    viewModel.loginUser(email, password)
+                } else {
+                    Toast.makeText(context, "이메일과 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show()
                 }
             },
             colors = ButtonDefaults.buttonColors(Color(0xFFFFC0CB)),
@@ -193,7 +225,23 @@ fun LoginContent(navController: NavController) {
             Text("Log in")
         }
     }
+
+    // 로그인 상태 처리
+    when (val authState = viewModel.authState.collectAsState().value) {
+        is AuthState.Loading -> CircularProgressIndicator()
+        is AuthState.Success -> {
+            Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
+            navController.navigate("CouplecodeScreen") {
+                popUpTo("auth_screen") { inclusive = true }
+            }
+        }
+        is AuthState.Error -> {
+            Toast.makeText(context, "로그인 실패: ${authState.message}", Toast.LENGTH_SHORT).show()
+        }
+        else -> {}
+    }
 }
+
 
 
 @Composable
@@ -218,35 +266,21 @@ fun TextFieldWithCloseIcon(label: String, value: String, onValueChange: (String)
 
 
 @Composable
-fun SocialMediaIcons() {
+fun SocialMediaIcons(onGoogleSignIn: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_apple),
-            contentDescription = "Apple",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
+        // Google 로그인 추가
         Icon(
             painter = painterResource(id = R.drawable.ic_google),
             contentDescription = "Google",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_facebook),
-            contentDescription = "Facebook",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_kakao),
-            contentDescription = "Kakao",
-            modifier = Modifier.size(39.dp), // 아이콘 크기 설정
+            modifier = Modifier
+                .size(36.dp)
+                .clickable { onGoogleSignIn() },
             tint = Color.Unspecified
         )
     }
 }
+
 

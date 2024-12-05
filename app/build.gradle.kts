@@ -105,10 +105,14 @@ dependencies {
     implementation(libs.google.firebase.messaging.ktx)
     implementation(libs.google.firebase.analytics.ktx)
     implementation(libs.play.services.auth) // 명시적 선언
+    implementation(libs.firebase.auth.ktx.v2211)
+    implementation(libs.com.google.firebase.firebase.firestore.ktx)
+    implementation(libs.firebase.database.ktx.v2032)
 
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.firebase.database.ktx)
     kapt(libs.androidx.room.compiler)
 
     // Gson
@@ -138,6 +142,8 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
 }
 
 

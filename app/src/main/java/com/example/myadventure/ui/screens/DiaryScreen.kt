@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
 
 import android.content.Context
@@ -17,9 +17,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 

@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
 
 import android.widget.Toast

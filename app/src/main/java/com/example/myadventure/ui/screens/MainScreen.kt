@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -17,8 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
 

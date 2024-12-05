@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
 // Compose와 Android 관련 import
 import android.net.Uri
@@ -21,23 +21,16 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
 import com.example.myadventure.ui.compose.Feature
 import com.example.myadventure.ui.compose.FeatureCardRow
-import com.example.myadventure.ui.compose.PointDisplay
-import com.example.myadventure.ui.profile.UserPreferences
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
-    val userPreferences = UserPreferences.getInstance(context)
 
     // 사용자 정보 로드
-    val userName by remember { mutableStateOf(userPreferences.getUserName()) }
-    val profileImageUriString by remember { mutableStateOf(userPreferences.getProfileImageUri()) }
-    val profileImageUri = profileImageUriString?.let { Uri.parse(it) }
 
     // pointsFlow 구독하여 포인트 상태 유지
-    val points by userPreferences.pointsFlow.collectAsState(initial = userPreferences.getPoints())
 
     Scaffold(
         containerColor = Color(0xFFF2E4DA),
@@ -65,13 +58,8 @@ fun HomeScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 사용자 프로필 섹션
-                UserProfileSection(userName, profileImageUri)
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // 포인트 표시
-                PointDisplay(points = points)
 
                 // 주요 기능 카드 표시
                 Spacer(modifier = Modifier.height(32.dp))

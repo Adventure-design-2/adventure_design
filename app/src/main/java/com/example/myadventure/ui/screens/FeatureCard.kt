@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

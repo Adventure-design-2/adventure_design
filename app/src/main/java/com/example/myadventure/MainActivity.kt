@@ -8,9 +8,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.example.myadventure.ui.functions.*
-import com.example.myadventure.ui.profile.ProfileComposable
+import com.example.myadventure.ui.screens.*
 import com.example.myadventure.ui.theme.MyAdventureTheme
 
 
@@ -35,25 +33,13 @@ class MainActivity : ComponentActivity() {
                         // MissionScreen에 MissionViewModel을 전달합니다.
                         MissionScreen(navController = navController, viewModel = missionViewModel)
                     }
-                    composable("profile_screen") {
-                        ProfileComposable(navController = navController)
-                    }
-                    composable("settings_screen") {
 
-                        SettingsScreen(navController = navController) // 설정 화면 추가
-                    }
 //                    composable("map_screen") {
 //                        MapScreen() // 지도 화면 추가
 //                    }
 
-                    composable("shop_screen") {
-                        ShopScreen(navController = navController)
-                    }
                     composable("signup_screen") {
                         SignUpScreen(navController = navController)
-                    }
-                    composable("garden_screen") {
-                        GardenScreen(navController = navController)
                     }
                     composable("verification_screen") {
                         VerificationScreen(navController = navController)
@@ -67,27 +53,7 @@ class MainActivity : ComponentActivity() {
                     composable("DDayScreen") {
                         DDayScreen(navController = navController)
                     }
-                    composable(
-                        route = "mission_detail/{missionTitle}/{missionDescription}/{missionLocation}",
-                        arguments = listOf(
-                            navArgument("missionTitle") { defaultValue = "" },
-                            navArgument("missionDescription") { defaultValue = "" },
-                            navArgument("missionLocation") { defaultValue = "" }
-                        )
-                    ) { backStackEntry ->
-                        val missionTitle = backStackEntry.arguments?.getString("missionTitle") ?: ""
-                        val missionDescription =
-                            backStackEntry.arguments?.getString("missionDescription") ?: ""
-                        val missionLocation =
-                            backStackEntry.arguments?.getString("missionLocation") ?: ""
 
-                        MissionDetailScreen(
-                            navController = navController,
-                            missionTitle = missionTitle,
-                            missionDescription = missionDescription,
-                            missionLocation = missionLocation
-                        )
-                    }
                 }
             }
         }

@@ -1,6 +1,5 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
-import android.Manifest
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
@@ -12,14 +11,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -29,12 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import androidx.compose.ui.platform.LocalFocusManager // 추가된 import 문
+import androidx.compose.ui.tooling.preview.Preview
 import java.text.SimpleDateFormat
 import java.util.Locale // 추가된 import 문
 import java.util.Date // 추가된 import 문
@@ -245,5 +242,8 @@ fun VerificationScreen(navController: NavController) {
     )
 }
 
+@Preview
+@Composable
+fun PreviewVerificationScreen() {
 
-
+}

@@ -21,10 +21,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.myadventure.ui.functions.FeatureCard
+import com.example.myadventure.ui.screens.FeatureCard
+
+
+data class Feature(
+    val route: String,
+    val text: String,
+    val backgroundRes: Int
+)
+
 
 @Composable
 fun FeatureCardRow(
@@ -80,4 +90,13 @@ fun FeatureCard(
             Text(text = text, style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+
+@Preview
+@Composable
+fun PreviewFeatureCard(){
+    val navController = NavController(LocalContext.current)
+    FeatureCard(navController = navController, route = "", text = "D-Day", backgroundRes = 0)
+
 }

@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.myadventure.ui.functions.DiaryScreens
 import com.example.myadventure.ui.screens.SignUpScreen
 import com.example.myadventure.viewmodel.AuthViewModel
 
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
                 startDestination = "signup_screen"
             ) {
                 composable("signup_screen") {
-                    SignUpScreen(navController = navController, viewModel = authViewModel)
+                    DiaryScreens(navController = navController)
                 }
             }
         }

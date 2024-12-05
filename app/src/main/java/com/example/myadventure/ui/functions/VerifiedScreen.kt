@@ -171,7 +171,7 @@ fun VerificationScreen(navController: NavController) {
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_galary),
+                            painter = painterResource(id = R.drawable.ic_diary),
                             contentDescription = "갤러리",
                             modifier = Modifier
                                 .size(48.dp)
@@ -241,48 +241,6 @@ fun VerificationScreen(navController: NavController) {
                     Text("미션 완료")
                 }
             }
-
-
-            // 코멘트 등록 팝업
-            if (showCommentRegisteredDialog) {
-                AlertDialog(
-                    onDismissRequest = { showCommentRegisteredDialog = false },
-                    title = { Text("코멘트 등록") },
-                    text = { Text("코멘트가 등록되었습니다!") },
-                    confirmButton = {
-                        TextButton(onClick = { showCommentRegisteredDialog = false }) {
-                            Text("확인")
-                        }
-                    }
-                )
-            }
-
-            // 미션 성공 팝업
-            if (showSuccessDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSuccessDialog = false },
-                    title = { Text("미션 성공") },
-                    text = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        // 이미지 추가
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_reward2), // 이미지 리소스 추가
-                            contentDescription = "Success Image",
-                            modifier = Modifier.size(100.dp) // 이미지 크기 조절
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("하트코인을 얻었어요!!", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFE91E63))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("X 100", style = MaterialTheme.typography.headlineMedium, color = Color.Black)
-                    }
-                    },
-                    confirmButton = {
-                        var showSuccessDialog = remember { mutableStateOf(false) } // 성공 팝업 표시 여부
-
-                    }
-                )
-            }
-
         }
     )
 }

@@ -42,9 +42,7 @@ fun SettingsScreen(navController: NavController) {
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFFF2E4DA))
             )
         },
-        bottomBar = { // 하단바 추가
-            BottomNavigationBar(navController = navController)
-        },
+
         content = { contentPadding ->
             Column(
                 modifier = Modifier

@@ -45,9 +45,7 @@ class MainActivity : ComponentActivity() {
 //                        MapScreen() // 지도 화면 추가
 //                    }
 
-                    composable("shop_screen") {
-                        ShopScreen(navController = navController)
-                    }
+                    
                     composable("signup_screen") {
                         SignUpScreen(navController = navController)
                     }

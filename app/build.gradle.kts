@@ -1,19 +1,17 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     kotlin("plugin.serialization") version "1.9.10"
     id("com.google.gms.google-services")
-    id("com.google.devtools.ksp")
+    id("kotlin-kapt")
 }
 
 android {
-    namespace = "com.example.hatethis"
+    namespace = "com.example.myadventure"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.hatethis"
+        applicationId = "com.example.myadventure"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -21,55 +19,45 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { stream ->
-                localProperties.load(stream)
+
+        buildTypes {
+            release {
+                isMinifyEnabled = false
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
             }
         }
-        val apiKey: String = localProperties.getProperty("API_KEY") ?: ""
-        buildConfigField("String", "API_KEY", "\"$apiKey\"")
-        val projectID: String = localProperties.getProperty("Project_ID") ?: ""
-        buildConfigField("String", "Project_ID", "\"$projectID\"")
-    }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+
+        buildFeatures {
+            compose = true
+            buildConfig = true
         }
-    }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-
-    configurations.all {
-        resolutionStrategy {
-            force("org.jetbrains:annotations:23.0.0")
+        composeOptions {
+            kotlinCompilerExtensionVersion = "1.5.3"
         }
-    }
 
-    configurations.implementation {
-        exclude(group = "com.intellij", module = "annotations")
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+
+        configurations.all {
+            resolutionStrategy {
+                force("org.jetbrains:annotations:23.0.0")
+            }
+        }
+
+        configurations.implementation {
+            exclude(group = "com.intellij", module = "annotations")
+        }
     }
 }
 
@@ -121,7 +109,7 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    kapt(libs.androidx.room.compiler)
 
     // Gson
     implementation(libs.gson.v2110)
@@ -151,4 +139,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
 

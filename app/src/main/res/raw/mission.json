@@ -1,0 +1,18 @@
+[
+  {
+    "title": "공원에서 산책하기",
+    "environment": 8,
+    "locationTag": ["공원", "자연"],
+    "detail": "친환경적인 환경에서 여유로운 산책을 즐겨보세요.",
+    "completedCount": 0,
+    "action": "walk_action"
+  },
+  {
+    "title": "도서관 방문",
+    "environment": 5,
+    "locationTag": ["도서관", "공부"],
+    "detail": "조용한 도서관에서 독서를 즐기며 마음의 양식을 쌓아보세요.",
+    "completedCount": 0,
+    "action": "library_action"
+  }
+]

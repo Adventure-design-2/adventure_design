@@ -2,3 +2,4 @@
 # Google Cloud 서비스 계정 키 파일
 gen-lang-client-0976176955-27b684d31a82.json
 git rm --cached gen-lang-client-0976176955-27b684d31a82.json
+google-services.json

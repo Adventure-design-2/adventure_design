@@ -14,7 +14,6 @@ import com.example.myadventure.ui.theme.MyAdventureTheme
 
 class MainActivity : ComponentActivity() {
     // MissionViewModel을 생성합니다.
-    private val missionViewModel: MissionViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +30,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("Missionscreen") {
                         // MissionScreen에 MissionViewModel을 전달합니다.
-                        MissionScreen(navController = navController, viewModel = missionViewModel)
+                        MissionScreen(navController = navController)
                     }
 
 //                    composable("map_screen") {
@@ -59,4 +58,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

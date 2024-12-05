@@ -16,8 +16,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-
-// 프로젝트 관련 import
 import com.example.myadventure.R
 import com.example.myadventure.ui.screens.card.Feature
 import com.example.myadventure.ui.screens.card.FeatureCardRow

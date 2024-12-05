@@ -99,7 +99,7 @@ fun MissionScreen(
                         Box(modifier = Modifier.fillMaxWidth()) {
                             Spacer(modifier = Modifier.height(48.dp))
                             Text(
-                                "상남자/상여자 되기 미션!",
+                                text = selectedMission?.title ?: "",
                                 color = Color(0xFFF776CC)
                             )
                             IconButton(
@@ -119,11 +119,7 @@ fun MissionScreen(
                     text = {
                         Column(modifier = Modifier.padding(top = 56.dp)) {
                             Text(
-                                "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
-                                        "빨대 없이 진지하게 한 모금, \n" +
-                                        "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
-                                        "가볍게 도전하며 즐거운 \n" +
-                                        "데이트를 만들어보세요!"
+                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
                             )
                         }
                     },

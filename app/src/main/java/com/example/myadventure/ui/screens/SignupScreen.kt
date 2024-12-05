@@ -1,7 +1,11 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.myadventure.ui.screens
 
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +23,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,8 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myadventure.R
+import com.example.myadventure.data.AuthManager
 import com.example.myadventure.viewmodel.AuthState
 import com.example.myadventure.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 
 @Composable
 fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
@@ -97,6 +102,22 @@ fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val authState by viewModel.authState.collectAsState()
+    val authManager = AuthManager()
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.result
+            if (account != null) {
+                viewModel.signInWithGoogle(account.idToken ?: "")
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Google Login Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -119,30 +140,19 @@ fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
 
         SocialMediaIcons(
             onGoogleSignIn = {
-                viewModel.signInWithGoogle("YOUR_WEB_CLIENT_ID") { success, message ->
-                    if (success) {
-                        Toast.makeText(context, "Google 회원가입 성공!", Toast.LENGTH_SHORT).show()
-                        navController.navigate("mission_screen") {
-                            popUpTo("signup_screen") { inclusive = true }
-                        }
-                    } else {
-                        Toast.makeText(context, "Google 회원가입 실패: $message", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                val signInClient = authManager.getGoogleSignInClient(context, "YOUR_WEB_CLIENT_ID")
+                val signInIntent = signInClient.signInIntent
+                launcher.launch(signInIntent)
             }
-        )
 
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
                 if (email.isNotBlank() && password.isNotBlank() && nickname.isNotBlank()) {
-                    // 로그인처럼 home_screen으로 바로 이동
-                    navController.navigate("mission_screen") {
-                        popUpTo("signup_screen") { inclusive = true }
-                    }
-                    Toast.makeText(context, "회원가입 성공! 로그인되었습니다.", Toast.LENGTH_SHORT).show()
+                    viewModel.registerWithEmail(email, password)
                 } else {
                     Toast.makeText(context, "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
                 }
@@ -153,26 +163,40 @@ fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
             Text("Sign up")
         }
     }
+
+    when (authState) {
+        is AuthState.Loading -> CircularProgressIndicator()
+        is AuthState.Success -> {
+            Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+            navController.navigate("mission_screen") {
+                popUpTo("signup_screen") { inclusive = true }
+            }
+        }
+        is AuthState.Error -> {
+            Toast.makeText(context, "회원가입 실패: ${(authState as AuthState.Error).message}", Toast.LENGTH_SHORT).show()
+        }
+        else -> {}
+    }
 }
+
 
 @Composable
 fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val authState by viewModel.authState.collectAsState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        // 이메일 및 비밀번호 입력
         TextFieldWithCloseIcon("Email", email) { email = it }
         TextFieldWithCloseIcon("Password", password) { password = it }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 비밀번호 재설정
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -182,7 +206,6 @@ fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 소셜 로그인 구분선
         Row(verticalAlignment = Alignment.CenterVertically) {
             HorizontalDivider(modifier = Modifier.weight(1f))
             Text("or", modifier = Modifier.padding(horizontal = 8.dp))
@@ -191,30 +214,18 @@ fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 소셜 로그인 아이콘 (Google 로그인 추가)
         SocialMediaIcons(
             onGoogleSignIn = {
-                // Google 로그인 호출
-                viewModel.signInWithGoogle("YOUR_WEB_CLIENT_ID") { success, message ->
-                    if (success) {
-                        Toast.makeText(context, "Google 로그인 성공!", Toast.LENGTH_SHORT).show()
-                        navController.navigate("CouplecodeScreen") {
-                            popUpTo("auth_screen") { inclusive = true }
-                        }
-                    } else {
-                        Toast.makeText(context, "Google 로그인 실패: $message", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                viewModel.loginWithGoogle("YOUR_WEB_CLIENT_ID")
             }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 로그인 버튼 (일반 이메일 로그인)
         Button(
             onClick = {
                 if (email.isNotBlank() && password.isNotBlank()) {
-                    viewModel.loginUser(email, password)
+                    viewModel.loginWithEmail(email, password)
                 } else {
                     Toast.makeText(context, "이메일과 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show()
                 }
@@ -226,8 +237,7 @@ fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
         }
     }
 
-    // 로그인 상태 처리
-    when (val authState = viewModel.authState.collectAsState().value) {
+    when (authState) {
         is AuthState.Loading -> CircularProgressIndicator()
         is AuthState.Success -> {
             Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
@@ -236,11 +246,12 @@ fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
             }
         }
         is AuthState.Error -> {
-            Toast.makeText(context, "로그인 실패: ${authState.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "로그인 실패: ${(authState as AuthState.Error).message}", Toast.LENGTH_SHORT).show()
         }
         else -> {}
     }
 }
+
 
 
 

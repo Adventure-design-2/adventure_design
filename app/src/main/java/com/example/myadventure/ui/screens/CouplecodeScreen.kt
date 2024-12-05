@@ -18,12 +18,15 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,21 +42,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
+import com.example.myadventure.viewmodel.InviteViewModel
+
 
 @Composable
-fun CouplecodeScreen(navController: NavController) {
-    // 사용자 입력값 상태 저장
+fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
     var inputCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    // "내 코드"를 난수로 생성
-    val myCode by remember { mutableStateOf(generateRandomCode()) }
+    // 초대 코드 상태 관리
+    var myCode by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(true) }
+
+    // 초대 코드 생성
+    LaunchedEffect(Unit) {
+        viewModel.generateInviteCode("currentUserUid") // 여기에 현재 사용자의 UID를 전달
+    }
+
+    // ViewModel에서 초대 코드 상태를 수신
+    val generatedCode by viewModel.inviteState.collectAsState()
+
+    if (generatedCode != null && myCode != generatedCode) {
+        myCode = generatedCode ?: ""
+        loading = false
+    }
 
     Column(
         modifier = Modifier
@@ -74,43 +90,45 @@ fun CouplecodeScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .background(Color(0xFFF8F8F8), shape = RectangleShape)
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-        ) {
-            Text(
-                text = "내 코드",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = myCode,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black,
-                modifier = Modifier.weight(2f)
-            )
-            IconButton(
-                onClick = {
-                    // 클립보드 매니저를 사용하여 내 코드 복사
-                    val clipboardManager = context.getSystemService(ClipboardManager::class.java)
-                    val clipData = ClipData.newPlainText("MyCode", myCode)
-                    clipboardManager?.setPrimaryClip(clipData)
-
-                    // 복사 완료 알림 표시
-                    Toast.makeText(context, "코드가 클립보드에 복사되었습니다.", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.size(24.dp)
+        if (loading) {
+            CircularProgressIndicator()
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .background(Color(0xFFF8F8F8), shape = RectangleShape)
+                    .padding(vertical = 12.dp, horizontal = 16.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_copy), // 복사 아이콘 리소스 사용
-                    contentDescription = "복사",
-                    tint = Color.Black
+                Text(
+                    text = "내 코드",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f)
                 )
+                Text(
+                    text = myCode,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    modifier = Modifier.weight(2f)
+                )
+                IconButton(
+                    onClick = {
+                        val clipboardManager = context.getSystemService(ClipboardManager::class.java)
+                        val clipData = ClipData.newPlainText("MyCode", myCode)
+                        clipboardManager?.setPrimaryClip(clipData)
+
+                        Toast.makeText(context, "코드가 클립보드에 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_copy), // 복사 아이콘 리소스 사용
+                        contentDescription = "복사",
+                        tint = Color.Black
+                    )
+                }
             }
         }
 
@@ -120,60 +138,67 @@ fun CouplecodeScreen(navController: NavController) {
         Text(
             text = "상대방의 커플 코드를 입력해주세요.",
             style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 24.sp, // 글자 크기 2배로 키움
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             ),
             color = Color.Black,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
+        // 나머지 코드는 그대로 유지
         BasicTextField(
-            value = inputCode, // 입력값 상태 사용
-            onValueChange = { inputCode = it }, // 입력값 변경 처리
+            value = inputCode,
+            onValueChange = { inputCode = it },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Text // 텍스트 입력 가능
+                keyboardType = KeyboardType.Text
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp) // 입력 칸의 고정 높이
+                .height(56.dp)
                 .padding(horizontal = 16.dp)
                 .border(1.dp, Color(0xFFD1D1D1), shape = RectangleShape)
                 .background(Color.White),
             textStyle = LocalTextStyle.current.copy(
-                fontSize = 18.sp, // 글자 크기
-                lineHeight = 24.sp, // 글자 높이 조정
-                color = Color.Black, // 글자 색상
-                textAlign = TextAlign.Center // 텍스트 가운데 정렬
+                fontSize = 18.sp,
+                lineHeight = 24.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Center
             ),
-            singleLine = true, // 여러 줄 입력 방지
+            singleLine = true,
             cursorBrush = SolidColor(Color.Black),
             decorationBox = { innerTextField ->
                 Box(
-                    contentAlignment = Alignment.Center, // 박스의 내용 중앙 정렬
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp) // 내부 텍스트 패딩
+                        .padding(horizontal = 8.dp)
                 ) {
                     innerTextField()
                 }
             }
         )
 
-        Spacer(modifier = Modifier.height(24.dp)) // 버튼과 입력 칸 간격 추가
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // 확인 버튼
         Button(
-            onClick = { /* 확인 버튼 클릭 처리 */
-                // 다음 화면으로 이동
-                navController.navigate("DDayScreen") {
-                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                }
-                      },
+            onClick = {
+                viewModel.validateInviteCode("currentUserUid", inputCode,
+                    onSuccess = { partnerUid ->
+                        Toast.makeText(context, "연동 성공! 파트너: $partnerUid", Toast.LENGTH_SHORT).show()
+                        navController.navigate("DDayScreen") {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                        }
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, "연동 실패: $error", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF776CC)) // 핑크색 버튼
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF776CC))
         ) {
             Text(
                 text = "확인",
@@ -184,18 +209,5 @@ fun CouplecodeScreen(navController: NavController) {
     }
 }
 
-// 코드생성 - 난수 생성 함수
-fun generateRandomCode(): String {
-    val letters = ('A'..'Z').toList()
-    val numbers = ('0'..'9').toList()
-    val randomLetters = List(2) { letters.random() }
-    val randomNumbers = List(4) { numbers.random() }
-    return (randomLetters + randomNumbers).joinToString("")
-}
 
-@Preview
-@Composable
-fun PreviewCouplecodeScreen() {
-    val navController = rememberNavController()
-    CouplecodeScreen(navController = navController)
-}
+

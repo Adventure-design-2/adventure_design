@@ -15,15 +15,21 @@ class RecordRepository {
         }
     }
 
-    // 기록 로드
-    suspend fun loadRecord(recordId: String): Record? {
-        val snapshot = database.child("records").child(recordId).get().await()
-        return snapshot.getValue(Record::class.java)
-    }
+    // 실시간 데이터베이스 변경 감지
+    fun listenToPartnerRecords(partnerUid: String, onRecordChanged: (Record) -> Unit) {
+        database.child("records").orderByChild("partnerUid").equalTo(partnerUid)
+            .addChildEventListener(object : com.google.firebase.database.ChildEventListener {
+                override fun onChildAdded(snapshot: com.google.firebase.database.DataSnapshot, previousChildName: String?) {
+                    snapshot.getValue(Record::class.java)?.let(onRecordChanged)
+                }
 
-    // 파트너와 공유된 기록 가져오기
-    suspend fun loadPartnerRecords(partnerUid: String): List<Record> {
-        val snapshot = database.child("records").orderByChild("partnerUid").equalTo(partnerUid).get().await()
-        return snapshot.children.mapNotNull { it.getValue(Record::class.java) }
+                override fun onChildChanged(snapshot: com.google.firebase.database.DataSnapshot, previousChildName: String?) {
+                    snapshot.getValue(Record::class.java)?.let(onRecordChanged)
+                }
+
+                override fun onChildRemoved(snapshot: com.google.firebase.database.DataSnapshot) {}
+                override fun onChildMoved(snapshot: com.google.firebase.database.DataSnapshot, previousChildName: String?) {}
+                override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
+            })
     }
 }

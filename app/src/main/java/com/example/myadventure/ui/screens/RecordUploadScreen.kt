@@ -1,7 +1,7 @@
 package com.example.myadventure.ui.screens
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -21,79 +21,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.R
+import com.example.myadventure.model.Record
+import com.example.myadventure.viewmodel.RecordViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import androidx.compose.ui.platform.LocalFocusManager // 추가된 import 문
-import androidx.compose.ui.tooling.preview.Preview
-import java.text.SimpleDateFormat
-import java.util.Locale // 추가된 import 문
-import java.util.Date // 추가된 import 문
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VerificationScreen(navController: NavController) {
+fun RecordUploadScreen(navController: NavController, viewModel: RecordViewModel) {
     var commentText by remember { mutableStateOf(TextFieldValue("")) }
     var isCommentEnabled by remember { mutableStateOf(false) }
     var isCommentRegistered by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val focusManager = LocalFocusManager.current // 키보드 내리기 위한 FocusManager
-
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    val missionName = "미션 이름 예시" // 미션명 추가
-    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) // 현재 날짜 추가
 
-    fun saveBitmapToFile(context: Context, bitmap: Bitmap): Uri? {
-        val file = File(context.filesDir, "diary_entry_${System.currentTimeMillis()}.jpg")
-        return try {
-            val outputStream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-            outputStream.flush()
-            outputStream.close()
-            Uri.fromFile(file)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    // 이미지와 코멘트, 미션명, 날짜를 하나의 비트맵으로 결합하는 함수
-    fun combineImageAndComment(image: Bitmap, missionName: String, date: String, comment: String): Bitmap {
-        val combinedBitmap = Bitmap.createBitmap(image.width, image.height + 200, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(combinedBitmap)
-        canvas.drawColor(android.graphics.Color.WHITE)
-        canvas.drawBitmap(image, 0f, 100f, null)
-
-        val paint = Paint().apply {
-            color = android.graphics.Color.BLACK
-            textSize = 40f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-
-        // 날짜와 미션명을 이미지 상단에 추가
-        canvas.drawText("미션: $missionName", 20f, 50f, paint)
-        canvas.drawText("날짜: $date", 20f, 100f, paint)
-
-        // 코멘트를 이미지 하단에 추가
-        canvas.drawText(comment, 20f, (image.height + 160).toFloat(), paint)
-        return combinedBitmap
-    }
-
+    // 카메라 및 갤러리 런처 설정
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
             val uri = saveBitmapToFile(context, bitmap)
             if (uri != null) {
                 selectedImageUri = uri
-                Toast.makeText(context, "사진이 성공적으로 찍혔습니다!", Toast.LENGTH_SHORT).show()
                 isCommentEnabled = true
             } else {
                 Toast.makeText(context, "사진 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
@@ -105,7 +63,6 @@ fun VerificationScreen(navController: NavController) {
         if (uri != null) {
             selectedImageUri = uri
             isCommentEnabled = true
-            Toast.makeText(context, "갤러리에서 사진을 선택했습니다!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -131,6 +88,7 @@ fun VerificationScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // 이미지 선택 및 미리보기
                 Box(
                     modifier = Modifier
                         .size(200.dp)
@@ -150,6 +108,7 @@ fun VerificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // 카메라 및 갤러리 버튼
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(40.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -160,9 +119,7 @@ fun VerificationScreen(navController: NavController) {
                             contentDescription = "카메라",
                             modifier = Modifier
                                 .size(48.dp)
-                                .clickable {
-                                    cameraLauncher.launch(null)
-                                }
+                                .clickable { cameraLauncher.launch(null) }
                         )
                         Text("카메라", fontSize = 16.sp)
                     }
@@ -172,9 +129,7 @@ fun VerificationScreen(navController: NavController) {
                             contentDescription = "갤러리",
                             modifier = Modifier
                                 .size(48.dp)
-                                .clickable {
-                                    galleryLauncher.launch("image/*")
-                                }
+                                .clickable { galleryLauncher.launch("image/*") }
                         )
                         Text("갤러리", fontSize = 16.sp)
                     }
@@ -182,6 +137,7 @@ fun VerificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // 댓글 입력
                 OutlinedTextField(
                     value = commentText,
                     onValueChange = { commentText = it },
@@ -195,18 +151,15 @@ fun VerificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // 댓글 등록 버튼
                 Button(
                     onClick = {
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("댓글이 등록 완료되었습니다")
                         }
                         isCommentRegistered = true
-                        focusManager.clearFocus() // 키보드를 내리도록 추가
                     },
                     enabled = isCommentEnabled && commentText.text.isNotBlank() && !isCommentRegistered,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isCommentRegistered) Color.Gray else Color(0xFFFFC0CB)
-                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(if (isCommentRegistered) "등록 완료" else "댓글 등록")
@@ -214,25 +167,22 @@ fun VerificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // 저장 및 업로드 버튼
                 Button(
                     onClick = {
                         selectedImageUri?.let { uri ->
-                            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                            val combinedBitmap = combineImageAndComment(bitmap, missionName, date, commentText.text)
-                            val fileUri = saveBitmapToFile(context, combinedBitmap)
-
-                            if (fileUri != null) {
-                                val screenshotFile = File(context.filesDir, "mission_screenshot_${System.currentTimeMillis()}.jpg")
-                                val outputStream = FileOutputStream(screenshotFile)
-                                combinedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                                outputStream.flush()
-                                outputStream.close()
-                                Toast.makeText(context, "스크린샷이 저장되었습니다!", Toast.LENGTH_SHORT).show()
-                                navController.navigate("garden_screen")
-                            }
+                            val record = Record(
+                                recordId = "",
+                                title = "미션 제목",
+                                description = commentText.text,
+                                image = uri.toString(),
+                                authorUid = "currentUserUid",
+                                partnerUid = "partnerUid"
+                            )
+                            viewModel.saveRecord(record)
+                            Toast.makeText(context, "기록이 저장되었습니다!", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC0CB)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("미션 완료")
@@ -242,8 +192,26 @@ fun VerificationScreen(navController: NavController) {
     )
 }
 
+// 유틸리티 함수: 비트맵을 로컬에 저장
+fun saveBitmapToFile(context: Context, bitmap: Bitmap): Uri? {
+    val file = File(context.filesDir, "record_${System.currentTimeMillis()}.jpg")
+    return try {
+        val outputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+        outputStream.flush()
+        outputStream.close()
+        Uri.fromFile(file)
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
+
+
 @Preview
 @Composable
-fun PreviewVerificationScreen() {
-
+fun RecordUploadScreenPreview() {
+    val navController = rememberNavController()
+    val viewModel = RecordViewModel(LocalContext.current)
+    RecordUploadScreen(navController, viewModel)
 }

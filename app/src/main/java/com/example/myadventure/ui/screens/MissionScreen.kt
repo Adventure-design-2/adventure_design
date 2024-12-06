@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.myadventure.Mission
@@ -25,8 +26,11 @@ import kotlinx.serialization.Serializable
 @Composable
 fun MissionScreen(
     navController: NavHostController,
-    viewModel: MissionViewModel
+    viewModel: MissionViewModel,
+    dDayResult: String // D-Day 값을 전달받음
 ) {
+    ////////////////////////////// 참고해 //////////////////////////
+//    Text(text = "D-Day 결과: $dDayResult") // 전달된 값을 표시
     val uiState by viewModel.uiState.collectAsState()
 
     var showSelectDialog by remember { mutableStateOf(false) }
@@ -44,14 +48,13 @@ fun MissionScreen(
             } else {
                 R.drawable.mission_char
             }
-            delay(1000) // 1초 지연
+            delay(230) // 1초 지연값(1000)
         }
     }
 
     Scaffold(
         containerColor = Color(0x5EFFC1E3),
         bottomBar = {
-            // 하단 네비게이션 바
             BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
@@ -60,13 +63,19 @@ fun MissionScreen(
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
-                // 메인 콘텐츠
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // D-Day 값 표시
+                    Text(
+                        text = "은영이와 철구\n $dDayResult ❤\n\n",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
                     MissionSelectionCard(
                         missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
                         missionDetails = mapOf(
@@ -191,8 +200,8 @@ fun MissionSelectionCard(
     onRefresh: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = "은영이와 철구\n" + "D + 85 ❤\n\n", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
+//        Text(text = "은영이와 철구\n" + "D + 85 ❤\n\n", style = MaterialTheme.typography.headlineSmall)
+//        Spacer(modifier = Modifier.height(16.dp))
 
         missions.forEach { mission ->
             MissionCard(
@@ -244,7 +253,6 @@ fun MissionCard(
                 color = Color(0xFF6D4C41),
                 modifier = Modifier.weight(1f)
             )
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.Top,
@@ -263,8 +271,3 @@ fun MissionCard(
     }
 }
 
-@Preview
-@Composable
-fun MissionScreenPreview() {
-    MissionScreen(navController = NavController(LocalContext.current))
-}

@@ -1,25 +1,11 @@
 package com.example.myadventure.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,13 +16,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DDayScreen(navController: NavController) {
     val context = LocalContext.current
-    var dDayInput by remember { mutableStateOf("") } // 숫자 입력 상태 관리
-    val formatTemplate = "YYYY-MM-DD" // 기본 템플릿
+    var dDayInput by remember { mutableStateOf("") } // YYYY-MM-DD 형식 입력 상태 관리
+    var dDayResult by remember { mutableStateOf("") } // D-Day 결과 상태 관리
+
+    // 오늘 날짜 계산
+    val todayDate = remember {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        sdf.format(Date())
+    }
 
     Box(
         modifier = Modifier
@@ -60,19 +54,16 @@ fun DDayScreen(navController: NavController) {
 
             // 날짜 입력 필드
             OutlinedTextField(
-                value = formatInput(dDayInput, formatTemplate),
+                value = dDayInput,
                 onValueChange = { newValue ->
-                    // 숫자만 허용
-                    val filteredValue = newValue.filter { it.isDigit() }
-
-                    // 최대 8자리 숫자만 입력 가능
-                    if (filteredValue.length <= 8) {
-                        dDayInput = filteredValue
+                    // YYYY-MM-DD 형식에 맞게 필터링
+                    if (newValue.length <= 10 && newValue.matches(Regex("[0-9-]*"))) {
+                        dDayInput = newValue
                     }
                 },
-                placeholder = { Text(text = formatTemplate) },
+                placeholder = { Text(text = "YYYY-MM-DD") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true, // 한 줄로 제한
+                singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -83,8 +74,9 @@ fun DDayScreen(navController: NavController) {
             // 확인 버튼
             Button(
                 onClick = {
-                    val formattedDate = formatInput(dDayInput, formatTemplate)
+                    dDayResult = calculateDDay(todayDate, dDayInput)
 
+                    // MainScreen으로 이동
                     navController.navigate("MainScreen") {
                         popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     }
@@ -101,42 +93,51 @@ fun DDayScreen(navController: NavController) {
                     color = Color.White
                 )
             }
-        }
-    }
-}
 
-// 입력된 숫자를 "YYYY-MM-DD" 형식에 맞게 반영
-fun formatInput(input: String, template: String): String {
-    val result = StringBuilder(template)
-    var inputIndex = 0
+            Spacer(modifier = Modifier.height(16.dp))
 
-    for (i in template.indices) {
-        if (template[i] in listOf('Y', 'M', 'D')) {
-            if (inputIndex < input.length) {
-                result[i] = input[inputIndex] // 입력값을 템플릿에 덮어쓰기
-                inputIndex++
+            // 결과 출력
+            if (dDayResult.isNotEmpty()) {
+                Text(
+                    text = dDayResult,
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
-        } else if (template[i] == '-') {
-            // '-'는 그대로 유지
-            result[i] = '-'
         }
     }
-
-    return enforceTwoDigitFormat(result.toString())
 }
 
-// MM-DD 부분을 두 자리 형식으로 강제 변환
-fun enforceTwoDigitFormat(input: String): String {
-    val parts = input.split("-")
 
-    if (parts.size == 3) {
-        val year = parts[0].padEnd(4, 'Y') // 연도는 4자리로 유지
-        val month = if (parts[1].length == 1) "0${parts[1]}" else parts[1] // 월을 2자리로 강제
-        val day = if (parts[2].length == 1) "0${parts[2]}" else parts[2] // 일을 2자리로 강제
-        return "$year-$month-$day"
+// D-Day 계산 함수
+@SuppressLint("SimpleDateFormat")
+fun calculateDDay(today: String, targetDate: String): String {
+    return try {
+        val sdf = SimpleDateFormat("yyyy-MM-dd")
+        val todayDate = sdf.parse(today)
+        val targetDateParsed = sdf.parse(targetDate)
+
+        if (todayDate != null && targetDateParsed != null) {
+            val diff = (todayDate.time - targetDateParsed.time) / (1000 * 60 * 60 * 24)
+
+            // 입력받은 날짜가 오늘보다 미래인 경우
+            if (diff < 0) {
+                return "날짜를 올바르게 입력해주세요"
+            }
+            if (diff == 0L) {
+                "오늘이 기념일입니다! 🎉" // 오늘이 기념일인 경우
+            } else {
+                "D+$diff" // 목표 날짜까지 남은 일수
+            }
+        } else {
+            "날짜를 올바르게 입력해주세요."
+        }
+    } catch (e: Exception) {
+        "날짜를 올바르게 입력해주세요."
     }
-    return input
 }
+
 
 @Preview
 @Composable

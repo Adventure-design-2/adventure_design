@@ -23,7 +23,7 @@ import com.example.myadventure.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController) {
-    val context = LocalContext.current
+    val dDayResult = "D+3" // 예제: 동적 값 (실제 계산 로직으로 변경 가능)
 
     // 전체 화면 배경 색
     Box(
@@ -67,45 +67,20 @@ fun MainScreen(navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                        Toast.makeText(context, "기록지 보기 클릭됨", Toast.LENGTH_SHORT).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC6D3)) // 분홍색 버튼
-                ) {
-                    Text(text = "기록지 보러가기", fontSize = 16.sp)
-                }
-
-                Button(
-                    onClick = {
-                        navController.navigate("MissionScreen") {
+                        navController.navigate("MissionScreen/$dDayResult") {
                             popUpTo(navController.graph.startDestinationId) { inclusive = false }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC6D3)) // 분홍색 버튼
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC6D3))
                 ) {
                     Text(text = "미션 하러가기", fontSize = 16.sp)
                 }
+
             }
         }
     }
 }
 
-@Composable
-fun MissionScreen(navController: NavController) {
-    // MissionScreen UI 정의
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF0F8FF)), // 연한 하늘색 배경
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "미션 화면입니다!",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-    }
-}
 
 @Preview
 @Composable

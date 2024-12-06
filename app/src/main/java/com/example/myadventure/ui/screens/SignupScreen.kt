@@ -91,7 +91,7 @@ fun SignUpScreen(navController: NavController) {
 }
 
 @Composable
-fun SignUpContent(navController: NavController) {
+fun SignUpContent(navController: NavController) {0
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

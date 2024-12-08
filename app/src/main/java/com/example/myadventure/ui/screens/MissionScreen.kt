@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.myadventure.data.ChatRoomRepository
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,39 +46,54 @@ import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
 import com.example.myadventure.model.UserProfile
 import com.example.myadventure.viewmodel.AuthViewModel
-import com.example.myadventure.viewmodel.MissionViewModel
 import com.example.myadventure.viewmodel.RecordViewModel
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 
 @Composable
 fun MissionScreen(
     navController: NavHostController,
-    repository: MissionRepository,
-    missionViewModel: MissionViewModel
+    repository: MissionRepository
 ) {
     val recommendedMissions = remember { repository.getRecommendedMissions() }
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
     var selectedMission by remember { mutableStateOf<Mission?>(null) }
     val context = LocalContext.current
-    val recordViewModel = RecordViewModel()
     val userProfile = remember { mutableStateOf<UserProfile?>(null) }
     val authViewModel = AuthViewModel()
     val coroutineScope = rememberCoroutineScope()
+    var newlyCreatedChatRoomId by remember { mutableStateOf<String?>(null) } // 상대방이 생성한 채팅방 ID
 
-// Fetch com.example.myadventure.model.UserProfile (assumes a ViewModel provides user data)
+    // 현재 사용자 정보 로드
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            // Example: Assuming `AuthViewModel` handles user profile loading
             authViewModel.loadUserProfile { profile ->
                 userProfile.value = profile
             }
         }
+
+        // 상대방이 생성한 채팅방 감지
+        val database = FirebaseDatabase.getInstance().reference
+        val currentUser = userProfile.value?.uid ?: ""
+        database.child("chatRooms").orderByChild("user2").equalTo(currentUser)
+            .addChildEventListener(object : ChildEventListener {
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                    val roomId = snapshot.key
+                    if (!roomId.isNullOrEmpty()) {
+                        newlyCreatedChatRoomId = roomId
+                    }
+                }
+
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onChildRemoved(snapshot: DataSnapshot) {}
+                override fun onCancelled(error: DatabaseError) {}
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            })
     }
-
-
-    // Record ID를 공유하기 위한 상태
-    var sharedRecordId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         containerColor = Color(0x5EFFC1E3),
@@ -92,6 +109,23 @@ fun MissionScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // 상대방이 생성한 채팅방으로 이동 버튼
+                if (newlyCreatedChatRoomId != null) {
+                    Button(
+                        onClick = {
+                            navController.navigate("chat_room_screen/${newlyCreatedChatRoomId}") {
+                                popUpTo("mission_screen") { inclusive = true }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("새로운 채팅방으로 이동")
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // 미션 선택 카드
                 MissionSelectionCard(
                     missions = recommendedMissions,
                     onMissionSelected = { mission ->
@@ -101,6 +135,7 @@ fun MissionScreen(
                 )
             }
 
+            // 미션 선택 확인 Dialog
             if (showSelectDialog) {
                 AlertDialog(
                     onDismissRequest = { showSelectDialog = false },
@@ -108,18 +143,28 @@ fun MissionScreen(
                     text = { Text("이 미션을 선택하시겠습니까?") },
                     confirmButton = {
                         TextButton(onClick = {
-                            missionViewModel.createChatRoom(
-                                missionTitle = selectedMission?.title ?: "제목 없음"
-                            ) { roomId ->
-                                if (roomId != null) {
-                                    sharedRecordId = roomId
-                                    Toast.makeText(context, "기록 채팅방 생성 완료!", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "기록 채팅방 생성 실패.", Toast.LENGTH_SHORT).show()
+                            val user1 = userProfile.value?.uid ?: ""
+                            val user2 = userProfile.value?.partnerUid ?: ""
+                            val mission = selectedMission
+
+                            if (user1.isNotBlank() && user2.isNotBlank() && mission != null) {
+                                val chatRoomRepository = ChatRoomRepository()
+                                chatRoomRepository.createChatRoom(user1, user2, mission) { roomId ->
+                                    if (roomId != null) {
+                                        newlyCreatedChatRoomId = roomId
+                                        Toast.makeText(context, "기록 채팅방 생성 완료!", Toast.LENGTH_SHORT)
+                                            .show()
+                                        showSecondDialog = true // AlertDialog를 수동으로 관리
+                                    } else {
+                                        Toast.makeText(context, "기록 채팅방 생성 실패.", Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
                                 }
+                            } else {
+                                Toast.makeText(context, "사용자 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                             showSelectDialog = false
-                            showSecondDialog = true
                         }) {
                             Text("예")
                         }
@@ -132,16 +177,18 @@ fun MissionScreen(
                 )
             }
 
-// 두 번째 AlertDialog
-            if (showSecondDialog) {
+            // 두 번째 AlertDialog
+            if (showSecondDialog && newlyCreatedChatRoomId != null) {
                 AlertDialog(
                     onDismissRequest = { showSecondDialog = false },
                     title = {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            Spacer(modifier = Modifier.height(48.dp))
                             Text(
-                                text = selectedMission?.title ?: "",
-                                color = Color(0xFFF776CC)
+                                text = selectedMission?.title ?: "미션 제목 없음",
+                                color = Color(0xFFF776CC),
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .padding(16.dp)
                             )
                             IconButton(
                                 onClick = { showSecondDialog = false },
@@ -158,44 +205,27 @@ fun MissionScreen(
                         }
                     },
                     text = {
-                        Column(modifier = Modifier.padding(top = 56.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다."
+                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다.",
+                                color = Color.Gray
                             )
                         }
                     },
                     confirmButton = {
-                        Column(modifier = Modifier.padding(top = 32.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             TextButton(onClick = {
-                                navController.navigate("find_date_location") {
+                                navController.navigate("chat_room_screen/${newlyCreatedChatRoomId}") {
                                     popUpTo("mission_screen") { inclusive = true }
                                 }
                                 showSecondDialog = false
                             }) {
-                                Text("데이트 장소 찾으러 가기")
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            TextButton(onClick = {
-                                // 기록 업로드 화면으로 이동
-                                sharedRecordId?.let { roomId ->
-                                    navController.navigate("recordupload_screen/$roomId") {
-                                        popUpTo("mission_screen") { inclusive = true }
-                                    }
-                                } ?: run {
-                                    Toast.makeText(context, "기록 ID를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-                                }
-                                showSecondDialog = false
-                            }) {
-                                Text("기록 업로드 화면으로 이동")
+                                Text("채팅방으로 이동")
                             }
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(600.dp)
+                    }
                 )
             }
-
         }
     )
 }

@@ -5,32 +5,11 @@ import android.content.ClipboardManager
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,30 +25,50 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myadventure.R
+import com.example.myadventure.viewmodel.AuthViewModel
 import com.example.myadventure.viewmodel.InviteViewModel
-
+import kotlinx.coroutines.launch
 
 @Composable
-fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
+fun CouplecodeScreen(
+    navController: NavController,
+    viewModel: InviteViewModel,
+    authViewModel: AuthViewModel,
+    userUid: String
+) {
     var inputCode by remember { mutableStateOf("") }
     val context = LocalContext.current
-
-    // 초대 코드 상태 관리
-    var myCode by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    var inviteCode by remember { mutableStateOf("") }
+    var statusMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(true) }
 
-    // 초대 코드 생성
-    LaunchedEffect(Unit) {
-        viewModel.generateInviteCode("currentUserUid") // 여기에 현재 사용자의 UID를 전달
+    // Firestore에서 초대 코드 로드 및 생성
+    LaunchedEffect(userUid) {
+        coroutineScope.launch {
+            authViewModel.loadUserProfile { profile ->
+                inviteCode = profile?.inviteCode.orEmpty()
+                if (inviteCode.isEmpty()) {
+                    coroutineScope.launch {
+                        val generatedCode = viewModel.generateInviteCode()
+                        authViewModel.updateInviteCode(userUid, generatedCode) { success ->
+                            if (success) {
+                                inviteCode = generatedCode
+                                viewModel.updateInviteState(userUid)
+                            } else {
+                                statusMessage = "초대 코드 생성 실패."
+                            }
+                        }
+                    }
+                } else {
+                    viewModel.updateInviteState(userUid)
+                }
+                loading = false
+            }
+        }
     }
 
-    // ViewModel에서 초대 코드 상태를 수신
-    val generatedCode by viewModel.inviteState.collectAsState()
-
-    if (generatedCode != null && myCode != generatedCode) {
-        myCode = generatedCode ?: ""
-        loading = false
-    }
 
     Column(
         modifier = Modifier
@@ -108,7 +107,7 @@ fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = myCode,
+                    text = inviteCode,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black,
                     modifier = Modifier.weight(2f)
@@ -116,7 +115,7 @@ fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
                 IconButton(
                     onClick = {
                         val clipboardManager = context.getSystemService(ClipboardManager::class.java)
-                        val clipData = ClipData.newPlainText("MyCode", myCode)
+                        val clipData = ClipData.newPlainText("MyCode", inviteCode)
                         clipboardManager?.setPrimaryClip(clipData)
 
                         Toast.makeText(context, "코드가 클립보드에 복사되었습니다.", Toast.LENGTH_SHORT).show()
@@ -145,7 +144,6 @@ fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // 나머지 코드는 그대로 유지
         BasicTextField(
             value = inputCode,
             onValueChange = { inputCode = it },
@@ -183,31 +181,39 @@ fun CouplecodeScreen(navController: NavController, viewModel: InviteViewModel) {
 
         Button(
             onClick = {
-                viewModel.validateInviteCode("currentUserUid", inputCode,
-                    onSuccess = { partnerUid ->
-                        Toast.makeText(context, "연동 성공! 파트너: $partnerUid", Toast.LENGTH_SHORT).show()
-                        navController.navigate("DDayScreen") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                coroutineScope.launch {
+                    isLoading = true
+                    val isConnected = authViewModel.connectPartner(userUid, inputCode)
+                    isLoading = false
+                    if (isConnected) {
+                        statusMessage = "연동 성공! 파트너가 연결되었습니다."
+                        navController.navigate("dday_screen") {
+                            popUpTo("couplecode_Screen") { inclusive = false }
                         }
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, "연동 실패: $error", Toast.LENGTH_SHORT).show()
+                    } else {
+                        statusMessage = "연동 실패. 초대 코드를 확인하세요."
                     }
-                )
+                }
             },
+            enabled = inputCode.isNotEmpty() && !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF776CC))
         ) {
-            Text(
-                text = "확인",
-                color = Color.White,
-                fontSize = 16.sp
-            )
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                Text("확인", color = Color.White, fontSize = 16.sp)
+            }
+        }
+
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 상태 메시지 표시
+        if (statusMessage.isNotEmpty()) {
+            Text(text = statusMessage, color = if (statusMessage.contains("성공")) Color.Green else Color.Red)
         }
     }
 }
-
-
-

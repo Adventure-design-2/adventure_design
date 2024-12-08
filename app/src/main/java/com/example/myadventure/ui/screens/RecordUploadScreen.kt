@@ -1,196 +1,175 @@
 package com.example.myadventure.ui.screens
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.myadventure.R
 import com.example.myadventure.model.Record
 import com.example.myadventure.viewmodel.RecordViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordUploadScreen(navController: NavController, viewModel: RecordViewModel) {
-    var commentText by remember { mutableStateOf(TextFieldValue("")) }
-    var isCommentEnabled by remember { mutableStateOf(false) }
-    var isCommentRegistered by remember { mutableStateOf(false) }
+fun RecordUploadScreen(
+    roomId: String,
+    viewModel: RecordViewModel,
+    navController: NavController
+) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
 
-    // 카메라 및 갤러리 런처 설정
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) {
-            val uri = saveBitmapToFile(context, bitmap)
-            if (uri != null) {
-                selectedImageUri = uri
-                isCommentEnabled = true
-            } else {
-                Toast.makeText(context, "사진 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
-            }
-        }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        imageUri = uri
     }
 
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            selectedImageUri = uri
-            isCommentEnabled = true
-        }
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // 제목 입력
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("제목") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFFF2E4DA),
-        topBar = {
-            TopAppBar(
-                title = { Text("인증사진 기록") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "뒤로가기")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF2E4DA))
-            )
-        },
-        content = { paddingValues ->
-            Column(
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 설명 입력
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("설명") },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 5
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 이미지 선택 버튼
+        Button(
+            onClick = {
+                // 이미지 선택기 열기
+                val pickImageIntent = Intent(Intent.ACTION_PICK).apply {
+                    type = "image/*"
+                }
+                launcher.launch("image/*")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("이미지 선택")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 이미지 미리보기
+        imageUri?.let {
+            Image(
+                painter = rememberImagePainter(it),
+                contentDescription = "선택된 이미지",
                 modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // 이미지 선택 및 미리보기
-                Box(
-                    modifier = Modifier
-                        .size(200.dp)
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    selectedImageUri?.let { uri ->
-                        Image(
-                            painter = rememberAsyncImagePainter(uri),
-                            contentDescription = "선택된 이미지",
-                            modifier = Modifier.size(200.dp)
-                        )
-                    } ?: run {
-                        Text("미션인증사진", color = Color.DarkGray)
-                    }
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 저장 버튼
+        Button(
+            onClick = {
+                if (title.isBlank() || description.isBlank()) {
+                    Toast.makeText(context, "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
+                    return@Button
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                isUploading = true
 
-                // 카메라 및 갤러리 버튼
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(40.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_camera),
-                            contentDescription = "카메라",
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clickable { cameraLauncher.launch(null) }
-                        )
-                        Text("카메라", fontSize = 16.sp)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_diary),
-                            contentDescription = "갤러리",
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clickable { galleryLauncher.launch("image/*") }
-                        )
-                        Text("갤러리", fontSize = 16.sp)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 댓글 입력
-                OutlinedTextField(
-                    value = commentText,
-                    onValueChange = { commentText = it },
-                    placeholder = { Text("댓글을 입력하세요...") },
-                    enabled = isCommentEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White)
-                        .padding(8.dp)
+                val record = Record(
+                    recordId = "", // Firebase에서 자동 생성
+                    title = title,
+                    description = description,
+                    image = imageUri.toString(), // 이미지 경로 저장
+                    authorUid = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                    partnerUid = roomId, // roomId로 연결된 파트너 정보
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 댓글 등록 버튼
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("댓글이 등록 완료되었습니다")
-                        }
-                        isCommentRegistered = true
-                    },
-                    enabled = isCommentEnabled && commentText.text.isNotBlank() && !isCommentRegistered,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (isCommentRegistered) "등록 완료" else "댓글 등록")
+                viewModel.uploadRecord(record) { success ->
+                    isUploading = false
+                    if (success) {
+                        Toast.makeText(context, "기록이 저장되었습니다!", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    } else {
+                        Toast.makeText(context, "기록 저장 실패.", Toast.LENGTH_SHORT).show()
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 저장 및 업로드 버튼
-                Button(
-                    onClick = {
-                        selectedImageUri?.let { uri ->
-                            val record = Record(
-                                recordId = "",
-                                title = "미션 제목",
-                                description = commentText.text,
-                                image = uri.toString(),
-                                authorUid = "currentUserUid",
-                                partnerUid = "partnerUid"
-                            )
-                            viewModel.saveRecord(record)
-                            Toast.makeText(context, "기록이 저장되었습니다!", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("미션 완료")
-                }
-            }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isUploading
+        ) {
+            Text(if (isUploading) "저장 중..." else "저장")
         }
-    )
+    }
 }
+
 
 // 유틸리티 함수: 비트맵을 로컬에 저장
 fun saveBitmapToFile(context: Context, bitmap: Bitmap): Uri? {
@@ -208,10 +187,3 @@ fun saveBitmapToFile(context: Context, bitmap: Bitmap): Uri? {
 }
 
 
-@Preview
-@Composable
-fun RecordUploadScreenPreview() {
-    val navController = rememberNavController()
-    val viewModel = RecordViewModel(LocalContext.current)
-    RecordUploadScreen(navController, viewModel)
-}

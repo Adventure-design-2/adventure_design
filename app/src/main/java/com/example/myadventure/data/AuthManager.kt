@@ -71,8 +71,5 @@ class AuthManager {
         auth.signOut()
     }
 
-    // 현재 사용자 가져오기
-    fun getCurrentUser(): FirebaseUser? {
-        return auth.currentUser
-    }
+
 }

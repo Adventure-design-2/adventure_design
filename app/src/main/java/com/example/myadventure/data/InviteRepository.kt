@@ -25,4 +25,18 @@ class InviteRepository {
         }
         return null
     }
+
+    suspend fun updateInviteCode(uid: String, inviteCode: String): Boolean {
+        return try {
+            // Firestore에서 inviteCode 필드를 업데이트
+            firestore.collection("users").document(uid)
+                .update("inviteCode", inviteCode)
+                .await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
 }

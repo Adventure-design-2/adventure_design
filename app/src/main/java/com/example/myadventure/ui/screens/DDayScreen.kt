@@ -85,7 +85,7 @@ fun DDayScreen(navController: NavController) {
                 onClick = {
                     val formattedDate = formatInput(dDayInput, formatTemplate)
 
-                    navController.navigate("MainScreen") {
+                    navController.navigate("mission_screen") {
                         popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     }
                 },

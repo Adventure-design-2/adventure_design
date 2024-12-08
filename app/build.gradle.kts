@@ -115,7 +115,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.firebase.database.ktx)
     kapt(libs.androidx.room.compiler)
-
     // Gson
     implementation(libs.gson.v2110)
 

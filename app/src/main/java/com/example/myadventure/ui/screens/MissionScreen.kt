@@ -42,16 +42,11 @@ import androidx.navigation.NavHostController
 import com.example.myadventure.R
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
-import com.example.myadventure.model.Record
-import com.example.myadventure.model.RecordRoom
 import com.example.myadventure.model.UserProfile
 import com.example.myadventure.viewmodel.AuthViewModel
 import com.example.myadventure.viewmodel.MissionViewModel
 import com.example.myadventure.viewmodel.RecordViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun MissionScreen(

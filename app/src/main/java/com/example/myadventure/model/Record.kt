@@ -9,10 +9,3 @@ data class Record(
     val partnerUid: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
-
-data class RecordRoom(
-    var roomId: String = "", // 채팅방 ID
-    val title: String = "",
-    val participants: List<String> = emptyList(), // 참여자 UID
-    val timestamp: Long = System.currentTimeMillis()
-)

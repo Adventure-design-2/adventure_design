@@ -2,7 +2,6 @@ package com.example.myadventure.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.myadventure.data.UserRepository
-import com.example.myadventure.model.RecordRoom
 import com.google.firebase.database.FirebaseDatabase
 import java.util.UUID
 

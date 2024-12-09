@@ -1,6 +1,7 @@
 package com.example.myadventure.ui.screens
 
-import android.os.Build
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -32,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import com.example.myadventure.data.ChatRoomRepository
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,13 +40,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.example.myadventure.R
+import com.example.myadventure.data.ChatRoomRepository
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
 import com.example.myadventure.model.UserProfile
 import com.example.myadventure.viewmodel.AuthViewModel
-import com.example.myadventure.viewmodel.RecordViewModel
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -56,7 +57,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MissionScreen(
     navController: NavHostController,
-    repository: MissionRepository
+    repository: MissionRepository,
+    dDayResult: String // D-Day 값을 전달받음
 ) {
     val recommendedMissions = remember { repository.getRecommendedMissions() }
     var showSelectDialog by remember { mutableStateOf(false) }
@@ -67,32 +69,48 @@ fun MissionScreen(
     val authViewModel = AuthViewModel()
     val coroutineScope = rememberCoroutineScope()
     var newlyCreatedChatRoomId by remember { mutableStateOf<String?>(null) } // 상대방이 생성한 채팅방 ID
+// 이미지 전환을 위한 상태
 
-    // 현재 사용자 정보 로드
+
+
+    // 현재 사용자 정보 로드 및 상대방이 생성한 채팅방 감지
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             authViewModel.loadUserProfile { profile ->
                 userProfile.value = profile
+
+                val currentUser = profile?.uid
+                if (!currentUser.isNullOrEmpty()) {
+                    val database = FirebaseDatabase.getInstance().reference
+                    database.child("chatRooms")
+                        .orderByChild("user2")
+                        .equalTo(currentUser)
+                        .addChildEventListener(object : ChildEventListener {
+                            override fun onChildAdded(
+                                snapshot: DataSnapshot,
+                                previousChildName: String?
+                            ) {
+                                val roomId = snapshot.key
+                                if (!roomId.isNullOrEmpty()) {
+                                    newlyCreatedChatRoomId = roomId
+                                }
+                            }
+
+                            override fun onChildChanged(
+                                snapshot: DataSnapshot,
+                                previousChildName: String?
+                            ) {}
+
+                            override fun onChildRemoved(snapshot: DataSnapshot) {}
+                            override fun onCancelled(error: DatabaseError) {}
+                            override fun onChildMoved(
+                                snapshot: DataSnapshot,
+                                previousChildName: String?
+                            ) {}
+                        })
+                }
             }
         }
-
-        // 상대방이 생성한 채팅방 감지
-        val database = FirebaseDatabase.getInstance().reference
-        val currentUser = userProfile.value?.uid ?: ""
-        database.child("chatRooms").orderByChild("user2").equalTo(currentUser)
-            .addChildEventListener(object : ChildEventListener {
-                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                    val roomId = snapshot.key
-                    if (!roomId.isNullOrEmpty()) {
-                        newlyCreatedChatRoomId = roomId
-                    }
-                }
-
-                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
-                override fun onChildRemoved(snapshot: DataSnapshot) {}
-                override fun onCancelled(error: DatabaseError) {}
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-            })
     }
 
     Scaffold(
@@ -108,13 +126,17 @@ fun MissionScreen(
                     .padding(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "은영이와 철구\n $dDayResult ❤\n\n",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
                 // 상대방이 생성한 채팅방으로 이동 버튼
-                if (newlyCreatedChatRoomId != null) {
+                newlyCreatedChatRoomId?.let { roomId ->
                     Button(
                         onClick = {
-                            navController.navigate("chat_room_screen/${newlyCreatedChatRoomId}") {
+                            navController.navigate("chat_room_screen/$roomId") {
                                 popUpTo("mission_screen") { inclusive = true }
                             }
                         },
@@ -210,6 +232,23 @@ fun MissionScreen(
                                 text = selectedMission?.detail ?: "미션 세부 정보가 없습니다.",
                                 color = Color.Gray
                             )
+                            Spacer(modifier = Modifier.height(40.dp))
+                            // WebView 추가
+                            AndroidView(
+                                factory = { context ->
+                                    WebView(context).apply {
+                                        webViewClient = WebViewClient()
+                                        settings.javaScriptEnabled = true
+                                        val locationQuery = selectedMission?.locationTag ?: "서울"
+                                        val naverMapUrl = "https://m.map.naver.com/search2/search.naver?query=$locationQuery&sm=hty&style=v5#/map/1"
+                                        loadUrl(naverMapUrl)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(400.dp)
+                            )
+
                         }
                     },
                     confirmButton = {
@@ -229,6 +268,7 @@ fun MissionScreen(
         }
     )
 }
+
 
 
 @Composable

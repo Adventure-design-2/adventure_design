@@ -8,9 +8,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.ui.functions.DiaryScreens
 import com.example.myadventure.ui.screens.*
@@ -58,18 +60,31 @@ fun AppNavHost(
     NavHost(navController = navController, startDestination = startDestination) {
         composable("signup_screen") {
             SignUpScreen(navController = navController, viewModel = authViewModel)
-        }
-        composable("main_screen") {
-            MainScreen(navController = navController)
-        }
-        composable("mission_screen") {
-            MissionScreen(
-                navController = navController,
-                repository = missionRepository
-            )
+            // MainScreen 컴포저블 추가 (dDayResult를 경로 매개변수로 전달받음)
+            composable(
+                route = "MainScreen/{dDayResult}",
+                arguments = listOf(navArgument("dDayResult") { type = NavType.StringType }) // dDayResult를 String 타입으로 정의
+            ) { backStackEntry ->
+                // 경로에서 dDayResult 값을 가져옴
+                val dDayResult = backStackEntry.arguments?.getString("dDayResult") ?: "D+0"
+                MainScreen(navController = navController, dDayResult = dDayResult)
+            }
+
+            // MissionScreen 컴포저블 추가 (dDayResult를 경로 매개변수로 전달받음)
+            composable(
+                route = "MissionScreen/{dDayResult}",
+                arguments = listOf(navArgument("dDayResult") { type = NavType.StringType }) // dDayResult를 String 타입으로 정의
+            ) { backStackEntry ->
+                // 경로에서 dDayResult 값을 가져옴
+                val dDayResult = backStackEntry.arguments?.getString("dDayResult") ?: "D+0"
+                MissionScreen(
+                    navController = navController,
+                    dDayResult = dDayResult,
+                    repository = missionRepository
+                )
+            }
         }
         composable("diary_screen") {
-            composable("chat_room_list_screen") {
                 ChatRoomListScreen(
                     viewModel = authViewModel,
                     onRoomSelected = { roomId ->
@@ -77,8 +92,6 @@ fun AppNavHost(
                     }
                 )
             }
-
-        }
         composable("recordupload_screen/{roomId}") { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
             RecordUploadScreen(
@@ -117,12 +130,13 @@ fun AppNavHost(
         }
         composable("chat_room_list_screen") {
             ChatRoomListScreen(
-                viewModel = authViewModel, // ChatRoomListScreen에서 사용하는 ViewModel
+                viewModel = authViewModel,
                 onRoomSelected = { roomId ->
                     navController.navigate("chat_room_screen/$roomId")
                 }
             )
         }
+
     }
 
 

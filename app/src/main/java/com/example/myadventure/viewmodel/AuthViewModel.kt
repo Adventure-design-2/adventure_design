@@ -189,17 +189,12 @@ class AuthViewModel : ViewModel() {
             }
 
             val partnerUid = snapshot.documents[0].id
+            val partnerName = snapshot.documents[1].getString("name") ?: ""
 
-            // Generate a shared ID for the connected users
-            val sharedId = "${userUid}_${partnerUid}"
 
             // Update user profiles with the shared ID
             firestore.collection("users").document(userUid)
-                .update("sharedId", sharedId)
-                .await()
-
-            firestore.collection("users").document(partnerUid)
-                .update("sharedId", sharedId)
+                .update("partnerName", partnerName)
                 .await()
 
             true

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.model.ChatMessage
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -35,7 +36,14 @@ fun ChatRoomScreen(
     val storage = FirebaseStorage.getInstance().reference
     val messages = remember { mutableStateListOf<ChatMessage>() }
     var inputMessage by remember { mutableStateOf("") }
-    var missionTitle by remember { mutableStateOf("Loading...") } // 미션 제목 초기 상태
+    var missionTitle by remember { mutableStateOf("Loading...") }
+    var currentUser by remember { mutableStateOf("") }
+
+    // 현재 사용자 ID 가져오기
+    LaunchedEffect(Unit) {
+        val auth = FirebaseAuth.getInstance()
+        currentUser = auth.currentUser?.uid ?: ""
+    }
 
     // 미션 제목 로드
     LaunchedEffect(roomId) {
@@ -78,7 +86,7 @@ fun ChatRoomScreen(
                     imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
                         val newMessage = ChatMessage(
                             id = database.push().key ?: "",
-                            senderId = "currentUser",
+                            senderId = currentUser,
                             imageUrl = downloadUri.toString()
                         )
 
@@ -135,22 +143,27 @@ fun ChatRoomScreen(
             contentPadding = PaddingValues(8.dp)
         ) {
             items(messages) { message ->
+                val isCurrentUser = message.senderId == currentUser
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
-                    horizontalArrangement = if (message.senderId == "currentUser") Arrangement.End else Arrangement.Start
+                    horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
                 ) {
                     Column(
                         modifier = Modifier
                             .background(
-                                color = if (message.senderId == "currentUser") Color(0xFFDFFFD6) else Color(0xFFF0F0F0),
+                                color = if (isCurrentUser) Color(0xFFDFFFD6) else Color(0xFFF0F0F0),
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                             )
                             .padding(8.dp)
                     ) {
                         message.message?.let {
-                            Text(text = it)
+                            Text(
+                                text = it,
+                                color = if (isCurrentUser) Color.Black else Color.DarkGray
+                            )
                         }
                         message.imageUrl?.let { imageUrl ->
                             Image(
@@ -206,7 +219,7 @@ fun ChatRoomScreen(
                         if (inputMessage.isNotBlank()) {
                             val newMessage = ChatMessage(
                                 id = database.push().key ?: "",
-                                senderId = "currentUser",
+                                senderId = currentUser,
                                 message = inputMessage
                             )
 
@@ -235,6 +248,8 @@ fun ChatRoomScreen(
         }
     }
 }
+
+
 
 
 

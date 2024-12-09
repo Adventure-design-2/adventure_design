@@ -2,6 +2,8 @@ package com.example.myadventure.data
 
 import com.example.myadventure.model.ChatRoom
 import com.example.myadventure.model.Mission
+import com.example.myadventure.model.UserProfile
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -67,19 +69,38 @@ class ChatRoomRepository {
     /**
      * 모든 채팅방 로드 (특정 사용자와 관련된 채팅방만 필터링 가능)
      *
-     * @param userId 사용자 ID
      * @param onResult 결과 콜백
      */
-    fun getChatRooms(userId: String, onResult: (List<ChatRoom>) -> Unit) {
-        database.child("chatRooms")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val chatRooms = snapshot.children.mapNotNull { it.getValue(ChatRoom::class.java) }
-                    .filter { it.user1 == userId || it.user2 == userId }
-                onResult(chatRooms)
-            }
-            .addOnFailureListener {
+    fun getChatRooms(onResult: (List<ChatRoom>) -> Unit) {
+        val userProfileRef = database.child("userProfiles")
+        val chatRoomRef = database.child("chatRooms")
+
+        // 현재 사용자 프로필에서 userUid 및 partnerUid 가져오기
+        userProfileRef.child(FirebaseAuth.getInstance().currentUser?.uid ?: "").get()
+            .addOnSuccessListener { userProfileSnapshot ->
+                val userProfile = userProfileSnapshot.getValue(UserProfile::class.java)
+                val userUid = userProfile?.uid
+                val partnerUid = userProfile?.partnerUid
+
+                if (userUid != null) {
+                    // 관련된 모든 채팅방 로드
+                    chatRoomRef.get()
+                        .addOnSuccessListener { chatRoomSnapshot ->
+                            val chatRooms = chatRoomSnapshot.children.mapNotNull {
+                                it.getValue(ChatRoom::class.java)
+                            }.filter {
+                                it.user1 == userUid || it.user2 == userUid || it.user1 == partnerUid || it.user2 == partnerUid
+                            }
+                            onResult(chatRooms)
+                        }.addOnFailureListener {
+                            onResult(emptyList())
+                        }
+                } else {
+                    onResult(emptyList())
+                }
+            }.addOnFailureListener {
                 onResult(emptyList())
             }
     }
+
 }

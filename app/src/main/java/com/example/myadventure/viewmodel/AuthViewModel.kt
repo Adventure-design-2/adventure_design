@@ -188,7 +188,6 @@ class AuthViewModel : ViewModel() {
                 return false
             }
 
-            val partnerUid = snapshot.documents[0].id
             val partnerName = snapshot.documents[1].getString("name") ?: ""
 
 

@@ -30,7 +30,6 @@ fun ChatRoomListScreen(
     viewModel: AuthViewModel,
     onRoomSelected: (String) -> Unit
 ) {
-    val repository = ChatRoomRepository()
     val chatRooms = remember { mutableStateListOf<ChatRoom>() }
     val context = LocalContext.current
     var currentUser by remember { mutableStateOf("") }

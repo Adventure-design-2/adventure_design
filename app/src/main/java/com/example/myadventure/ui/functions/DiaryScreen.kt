@@ -148,67 +148,67 @@ fun DiaryEntryCard(entry: DiaryEntry) {
             ) {
                 Text("20240412", style = MaterialTheme.typography.bodyMedium)
             }// text 색상을 정하는 코드(위에 세줄) 데이팅날짜
-                Column(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    val context = LocalContext.current
-                    val dialogBitmap = try {
-                        // 이미지 파일이 존재하는 경우 디코딩
-                        entry.imageUri.path?.let { path ->
-                            BitmapFactory.decodeFile(path)
-                        } ?: BitmapFactory.decodeResource(
-                            context.resources,
-                            R.drawable.dirarytest // 기본 이미지
-                        )
-                    } catch (e: Exception) {
-                        // 예외 발생 시 기본 이미지
-                        BitmapFactory.decodeResource(
-                            context.resources,
-                            R.drawable.dirarytest
-                        )
-                    }
+            Column(
+                modifier = Modifier.padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val context = LocalContext.current
+                val dialogBitmap = try {
+                    // 이미지 파일이 존재하는 경우 디코딩
+                    entry.imageUri.path?.let { path ->
+                        BitmapFactory.decodeFile(path)
+                    } ?: BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.dirarytest // 기본 이미지
+                    )
+                } catch (e: Exception) {
+                    // 예외 발생 시 기본 이미지
+                    BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.dirarytest
+                    )
+                }
 
-                    //팝업창
-                    Box(
-                        modifier = Modifier
-                            .size(width = 500.dp, height = 450.dp)
-                            .background(Color.White)
-                            .padding(16.dp)
+                //팝업창
+                Box(
+                    modifier = Modifier
+                        .size(width = 500.dp, height = 450.dp)
+                        .background(Color.White)
+                        .padding(16.dp)
+                ){
+                    //이미지 생성 날짜
+                    Text(text = entry.date, style = MaterialTheme.typography.bodyMedium)
+
+                    Column (
+                        modifier = Modifier.fillMaxSize(), // Column이 Box 크기를 가득 채움
+                        horizontalAlignment = Alignment.CenterHorizontally, // 수평 정렬
+                        verticalArrangement = Arrangement.Center // 수직 정렬
                     ){
-                        //이미지 생성 날짜
-                        Text(text = entry.date, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        Column (
-                            modifier = Modifier.fillMaxSize(), // Column이 Box 크기를 가득 채움
-                            horizontalAlignment = Alignment.CenterHorizontally, // 수평 정렬
-                            verticalArrangement = Arrangement.Center // 수직 정렬
-                        ){
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // 이미지를 Bitmap 형태로 표시
-                            Image(
-                                bitmap = dialogBitmap.asImageBitmap(),
-                                contentDescription = "Diary Image (Dialog)",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp)
-                            )
-                            Text(text = entry.missionName, style = MaterialTheme.typography.bodyLarge)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(text = entry.comment, style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(18.dp))
-                            Button(onClick = { showDialog = false }) {
-                                Text("닫기")
+                        // 이미지를 Bitmap 형태로 표시
+                        Image(
+                            bitmap = dialogBitmap.asImageBitmap(),
+                            contentDescription = "Diary Image (Dialog)",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                        )
+                        Text(text = entry.missionName, style = MaterialTheme.typography.bodyLarge)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(text = entry.comment, style = MaterialTheme.typography.bodySmall)
+                        Spacer(modifier = Modifier.height(18.dp))
+                        Button(onClick = { showDialog = false }) {
+                            Text("닫기")
                         }
 
                     }
 
-                    }
                 }
             }
         }
     }
+}
 
 
 

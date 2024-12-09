@@ -37,27 +37,45 @@ fun DiaryScreens(navController: NavController) {
         diaryEntries.addAll(loadDiaryEntries(context))
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(
-            text = "Diary",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Back icon in the top-left corner
+        Image(
+            painter = painterResource(id = R.drawable.ic_back),
+            contentDescription = "Back Icon",
+            modifier = Modifier
+                .size(48.dp) // Icon size
+                .padding(8.dp) // Padding from the top-left corner
+                .align(Alignment.TopStart) // Align to top-left
         )
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // 2열로 표시하는 LazyVerticalGrid
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2), // 2열로 구성
-            verticalArrangement = Arrangement.spacedBy(16.dp), // 세로 간격
-            horizontalArrangement = Arrangement.spacedBy(16.dp), // 가로 간격
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 56.dp) // Add padding to avoid overlap with the icon
         ) {
-            items(diaryEntries) { entry ->
-                DiaryEntryCard(entry)
+            Text(
+                text = "Diary",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 2-column grid layout
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), // 2 columns
+                verticalArrangement = Arrangement.spacedBy(16.dp), // Vertical spacing
+                horizontalArrangement = Arrangement.spacedBy(16.dp), // Horizontal spacing
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(diaryEntries) { entry ->
+                    DiaryEntryCard(entry)
+                }
             }
         }
     }
 }
+
+
 
 // 다이어리 항목 데이터 클래스
 data class DiaryEntry(val imageUri: Uri, val date: String, val missionName: String, val comment: String)
@@ -85,6 +103,7 @@ fun DiaryEntryCard(entry: DiaryEntry) {
 //카드들 ui 수정하려면 여기서
 
     Card(
+
         modifier = Modifier
             .padding(10.dp)
             .clickable { showDialog = true }

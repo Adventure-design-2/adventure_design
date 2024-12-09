@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController, dDayResult: String) {
     // 전체 화면 배경 색
@@ -85,9 +84,3 @@ fun MainScreen(navController: NavController, dDayResult: String) {
     }
 }
 
-@Preview
-@Composable
-fun PreviewMainScreen() {
-    val navController = rememberNavController()
-    MainScreen(navController = navController, dDayResult = "D+3") // 미리보기에서 예제 값 전달
-}

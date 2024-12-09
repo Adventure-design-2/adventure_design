@@ -16,7 +16,6 @@ import androidx.navigation.NavController
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DDayScreen(navController: NavController) {
     var dDayInput by remember { mutableStateOf("") } // YYYY-MM-DD 형식 입력 상태 관리
@@ -82,6 +81,7 @@ fun DDayScreen(navController: NavController) {
                 )
             }
 
+
             Spacer(modifier = Modifier.height(16.dp))
 
             if (dDayResult.isNotEmpty()) {
@@ -116,11 +116,11 @@ fun calculateDDay(today: String, targetDate: String): String {
             }
         } else {
             "날짜를 올바르게 입력해주세요."
+
         }
     } catch (e: Exception) {
         "날짜를 올바르게 입력해주세요."
     }
 }
-
 
 

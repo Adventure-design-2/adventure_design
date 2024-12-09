@@ -1,9 +1,15 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.myadventure.ui.screens
 
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,12 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +33,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,18 +44,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
+import com.example.myadventure.data.AuthManager
+import com.example.myadventure.viewmodel.AuthState
+import com.example.myadventure.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
     var selectedTab by remember { mutableStateOf("Sign up") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,51 +100,119 @@ fun SignUpScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         if (selectedTab == "Sign up") {
-            SignUpContent(navController)
+            SignUpContent(navController, viewModel)
         } else {
-            LoginContent(navController)
+            LoginContent(navController, viewModel)
         }
     }
 }
 
 @Composable
-fun SignUpContent(navController: NavController) {0
+
+fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
+
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    val authState by viewModel.authState.collectAsState()
+
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            isLoading = true
+            viewModel.signInWithGoogle(account.idToken!!) { success ->
+                isLoading = false
+                if (success) {
+                    Toast.makeText(context, "Google 로그인 성공!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Google 로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: ApiException) {
+            isLoading = false
+            Toast.makeText(context, "Google 로그인 실패: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        TextFieldWithCloseIcon("Nickname", nickname) { nickname = it }
-        TextFieldWithCloseIcon("Email", email) { email = it }
-        TextFieldWithCloseIcon("Password", password) { password = it }
+//        TextFieldWithCloseIcon("Nickname", nickname) { nickname = it }
+        OutlinedTextField(
+            value = nickname,
+            onValueChange = { nickname = it },
+            label = { Text("Nickname") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+                value = email,
+        onValueChange = { email = it },
+        label = { Text("이메일") },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 비밀번호 입력 필드
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("비밀번호") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                    Icon(
+                        imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password"
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
             Text("or", modifier = Modifier.padding(horizontal = 8.dp))
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        SocialMediaIcons()
+        SocialMediaIcons(
+            onGoogleSignIn = {
+                val signInIntent = googleSignInClient.signInIntent
+                launcher.launch(signInIntent)
+            }
+
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
-                if (email.isNotBlank() && password.isNotBlank() && nickname.isNotBlank()) {
-                    // 로그인처럼 home_screen으로 바로 이동
-                    navController.navigate("mission_screen") {
-                        popUpTo("signup_screen") { inclusive = true }
-                    }
-                    Toast.makeText(context, "회원가입 성공! 로그인되었습니다.", Toast.LENGTH_SHORT).show()
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    viewModel.registerWithEmail(email, password)
                 } else {
                     Toast.makeText(context, "모든 필드를 입력하세요.", Toast.LENGTH_SHORT).show()
                 }
@@ -138,23 +223,79 @@ fun SignUpContent(navController: NavController) {0
             Text("Sign up")
         }
     }
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+            navController.navigate("mission_screen") {
+                popUpTo("signup_screen") { inclusive = true }
+            }
+        }
+    }
 }
 
+
 @Composable
-fun LoginContent(navController: NavController) {
+fun LoginContent(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    val authState by viewModel.authState.collectAsState()
+    var isLoading by remember { mutableStateOf(false) }
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            viewModel.signInWithGoogle(account.idToken!!) { success ->
+                isLoading = false
+                if (success) {
+                    Toast.makeText(context, "Google 로그인 성공!", Toast.LENGTH_SHORT).show()
+
+                } else {
+                    Toast.makeText(context, "Google 로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            }// 성공 시 authState가 업데이트됨
+        } catch (e: ApiException) {
+            Toast.makeText(context, "Google 로그인 실패: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("이전에 애플 로그인을 하셨습니다.", fontSize = 14.sp, color = Color.Gray)
-
-        TextFieldWithCloseIcon("Email", email) { email = it }
-        TextFieldWithCloseIcon("Password", password) { password = it }
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("이메일") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("비밀번호") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                    Icon(
+                        imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password"
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -168,25 +309,28 @@ fun LoginContent(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
             Text("or", modifier = Modifier.padding(horizontal = 8.dp))
-            Divider(modifier = Modifier.weight(1f))
+            HorizontalDivider(modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        SocialMediaIcons()
+        SocialMediaIcons(
+            onGoogleSignIn = {
+                val signInIntent = googleSignInClient.signInIntent
+                launcher.launch(signInIntent)
+            }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
-                // 로그인 성공 메시지 Toast로 표시
-                Toast.makeText(context, "로그인에 성공했습니다.", Toast.LENGTH_SHORT).show()
-
-                // 다음 화면으로 이동
-                navController.navigate("CouplecodeScreen") {
-                    popUpTo("auth_screen") { inclusive = true }
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    viewModel.loginWithEmail(email, password) // 로그인 시도
+                } else {
+                    Toast.makeText(context, "이메일과 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show()
                 }
             },
             colors = ButtonDefaults.buttonColors(Color(0xFFFFC0CB)),
@@ -195,60 +339,43 @@ fun LoginContent(navController: NavController) {
             Text("Log in")
         }
     }
-}
 
-
-@Composable
-fun TextFieldWithCloseIcon(label: String, value: String, onValueChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        trailingIcon = {
-            if (value.isNotEmpty()) {
-                IconButton(onClick = { onValueChange("") }) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear")
+    // 로그인 상태 변화 감지 및 네비게이션
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Success -> {
+                Toast.makeText(context, "로그인 성공!", Toast.LENGTH_SHORT).show()
+                navController.navigate("main_screen") {
+                    popUpTo("signup_screen") { inclusive = true } // signup_screen을 스택에서 제거
                 }
             }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        singleLine = true
-    )
+            is AuthState.Error -> {
+                Toast.makeText(context, "로그인 실패: ${(authState as AuthState.Error).message}", Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+    }
 }
 
 
+
+
 @Composable
-fun SocialMediaIcons() {
+fun SocialMediaIcons(onGoogleSignIn: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_apple),
-            contentDescription = "Apple",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
+        // Google 로그인 추가
         Icon(
             painter = painterResource(id = R.drawable.ic_google),
             contentDescription = "Google",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_facebook),
-            contentDescription = "Facebook",
-            modifier = Modifier.size(36.dp), // 아이콘 크기 설정
-            tint = Color.Unspecified
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_kakao),
-            contentDescription = "Kakao",
-            modifier = Modifier.size(39.dp), // 아이콘 크기 설정
+            modifier = Modifier
+                .size(36.dp)
+                .clickable { onGoogleSignIn() },
             tint = Color.Unspecified
         )
     }
 }
+
 

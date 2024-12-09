@@ -1,8 +1,5 @@
 package com.example.myadventure.ui.screens
 
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -18,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,92 +29,33 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.example.myadventure.Mission
+import com.example.myadventure.MissionViewModel
 import com.example.myadventure.R
-
-import com.example.myadventure.data.ChatRoomRepository
-import com.example.myadventure.data.MissionRepository
-import com.example.myadventure.model.Mission
-import com.example.myadventure.model.UserProfile
-import com.example.myadventure.viewmodel.AuthViewModel
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.launch
-
 import kotlinx.coroutines.delay
-
+import kotlinx.serialization.Serializable
 
 @Composable
 fun MissionScreen(
     navController: NavHostController,
-    repository: MissionRepository,
+    viewModel: MissionViewModel,
     dDayResult: String // D-Day 값을 전달받음
 ) {
-    val recommendedMissions = remember { repository.getRecommendedMissions() }
     ////////////////////////////// 참고해 //////////////////////////
 //    Text(text = "D-Day 결과: $dDayResult") // 전달된 값을 표시
     val uiState by viewModel.uiState.collectAsState()
+
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
-    var selectedMission by remember { mutableStateOf<Mission?>(null) }
-    val context = LocalContext.current
-    val userProfile = remember { mutableStateOf<UserProfile?>(null) }
-    val authViewModel = AuthViewModel()
-    val coroutineScope = rememberCoroutineScope()
-    var newlyCreatedChatRoomId by remember { mutableStateOf<String?>(null) } // 상대방이 생성한 채팅방 ID
-// 이미지 전환을 위한 상태
-
-
-
-    // 현재 사용자 정보 로드 및 상대방이 생성한 채팅방 감지
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            authViewModel.loadUserProfile { profile ->
-                userProfile.value = profile
-
-                val currentUser = profile?.uid
-                if (!currentUser.isNullOrEmpty()) {
-                    val database = FirebaseDatabase.getInstance().reference
-                    database.child("chatRooms")
-                        .orderByChild("user2")
-                        .equalTo(currentUser)
-                        .addChildEventListener(object : ChildEventListener {
-                            override fun onChildAdded(
-                                snapshot: DataSnapshot,
-                                previousChildName: String?
-                            ) {
-                                val roomId = snapshot.key
-                                if (!roomId.isNullOrEmpty()) {
-                                    newlyCreatedChatRoomId = roomId
-                                }
-                            }
-
-                            override fun onChildChanged(
-                                snapshot: DataSnapshot,
-                                previousChildName: String?
-                            ) {}
-
-                            override fun onChildRemoved(snapshot: DataSnapshot) {}
-                            override fun onCancelled(error: DatabaseError) {}
-                            override fun onChildMoved(
-                                snapshot: DataSnapshot,
-                                previousChildName: String?
-                            ) {}
-                        })
-                }
-            }
-        }
-    }
+    var selectedMission by remember { mutableStateOf<String?>(null) }
 
     // 이미지 전환을 위한 상태
     var currentImage by remember { mutableStateOf(R.drawable.mission_char) }
@@ -146,43 +83,26 @@ fun MissionScreen(
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
-
-              Column(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "은영이와 철구\n $dDayResult ❤\n\n",
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                    // D-Day 값 표시
+                    Text(
+                        text = "은영이와 철구\n $dDayResult ❤\n\n",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
 
-                // 상대방이 생성한 채팅방으로 이동 버튼
-                newlyCreatedChatRoomId?.let { roomId ->
-                    Button(
-                        onClick = {
-                            navController.navigate("chat_room_screen/$roomId") {
-                                popUpTo("mission_screen") { inclusive = true }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("새로운 채팅방으로 이동")
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // 미션 선택 카드
-                MissionSelectionCard(
-                    missions = recommendedMissions,
-                    onMissionSelected = { mission ->
-                        selectedMission = mission
-                        showSelectDialog = true
-                    },
-
-              
+                    MissionSelectionCard(
+                        missions = listOf("상남자/상여자 되기", "고요한 저녁 미션!", "실내 활동 미션 1"),
+                        missionDetails = mapOf(
+                            "상남자/상여자 되기" to ("공원" to "쓰레기 줍기"),
+                            "고요한 저녁 미션!" to ("산" to "산책하기"),
+                            "실내 활동 미션 1" to ("집" to "정리정돈")
+                        ),
                         refreshCount = 3,
                         remainingTime = 300,
                         onMissionSelected = { mission ->
@@ -201,77 +121,40 @@ fun MissionScreen(
                         .align(Alignment.BottomStart)
                         .padding(16.dp)
                         .size(170.dp) // 캐릭터 크기 조절
-
                 )
 
-
-            // 미션 선택 확인 Dialog
-            if (showSelectDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSelectDialog = false },
-                    title = { Text("선택 하시겠습니까?") },
-                    text = { Text("이 미션을 선택하시겠습니까?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            val user1 = userProfile.value?.uid ?: ""
-                            val user2 = userProfile.value?.partnerUid ?: ""
-                            val mission = selectedMission
-
-                            if (user1.isNotBlank() && user2.isNotBlank() && mission != null) {
-                                val chatRoomRepository = ChatRoomRepository()
-                                chatRoomRepository.createChatRoom(user1, user2, mission) { roomId ->
-                                    if (roomId != null) {
-                                        newlyCreatedChatRoomId = roomId
-                                        Toast.makeText(context, "기록 채팅방 생성 완료!", Toast.LENGTH_SHORT)
-                                            .show()
-                                        showSecondDialog = true // AlertDialog를 수동으로 관리
-                                    } else {
-                                        Toast.makeText(context, "기록 채팅방 생성 실패.", Toast.LENGTH_SHORT)
-                                            .show()
-                                    }
-                                }
-                            } else {
-                                Toast.makeText(context, "사용자 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT)
-                                    .show()
+                if (showSelectDialog) {
+                    // 미션 선택 다이얼로그
+                    AlertDialog(
+                        onDismissRequest = { showSelectDialog = false },
+                        title = { Text("선택 하시겠습니까?") },
+                        text = { Text("이 미션을 선택하시겠습니까?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showSelectDialog = false
+                                showSecondDialog = true
+                            }) {
+                                Text("예")
                             }
-                            showSelectDialog = false
-                        }) {
-                            Text("예")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showSelectDialog = false }) {
-                            Text("아니요")
-
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showSelectDialog = false }) {
+                                Text("아니요")
+                            }
                         }
                     )
                 }
 
-
-            // 두 번째 AlertDialog
-            if (showSecondDialog && newlyCreatedChatRoomId != null) {
-                AlertDialog(
-                    onDismissRequest = { showSecondDialog = false },
-                    title = {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = selectedMission?.title ?: "미션 제목 없음",
-                                color = Color(0xFFF776CC),
-                                modifier = Modifier
-                                    .align(Alignment.CenterStart)
-                                    .padding(16.dp)
-                            )
-                            IconButton(
-                                onClick = { showSecondDialog = false },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_delete),
-                                    contentDescription = "닫기",
-                                    tint = Color.Unspecified
-
+                if (showSecondDialog) {
+                    // 두 번째 다이얼로그
+                    AlertDialog(
+                        onDismissRequest = { showSecondDialog = false },
+                        title = {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Spacer(modifier = Modifier.height(48.dp))
+                                Text(
+                                    "상남자/상여자 되기 미션!",
+                                    color = Color(0xFFF776CC)
                                 )
                                 IconButton(
                                     onClick = { showSecondDialog = false },
@@ -286,72 +169,68 @@ fun MissionScreen(
                                     )
                                 }
                             }
-
-                        }
-                    },
-                    text = {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = selectedMission?.detail ?: "미션 세부 정보가 없습니다.",
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(40.dp))
-                            // WebView 추가
-                            AndroidView(
-                                factory = { context ->
-                                    WebView(context).apply {
-                                        webViewClient = WebViewClient()
-                                        settings.javaScriptEnabled = true
-                                        val locationQuery = selectedMission?.locationTag ?: "서울"
-                                        val naverMapUrl = "https://m.map.naver.com/search2/search.naver?query=$locationQuery&sm=hty&style=v5#/map/1"
-                                        loadUrl(naverMapUrl)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(600.dp)
-                            )
-
-                        }
-                    },
-                    confirmButton = {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            TextButton(onClick = {
-                                navController.navigate("chat_room_screen/${newlyCreatedChatRoomId}") {
-                                    popUpTo("mission_screen") { inclusive = true }
-                                }
-                                showSecondDialog = false
-                            }) {
-                                Text("채팅방으로 이동")
+                        },
+                        text = {
+                            Column(modifier = Modifier.padding(top = 56.dp)) {
+                                Text(
+                                    "오늘은 컵만 들고 음료를 마셔보세요!" + "\n" +
+                                            "빨대 없이 진지하게 한 모금, \n" +
+                                            "연인과 웃음이 가득한 특별한 순간이 될지도? \n\n" +
+                                            "가볍게 도전하며 즐거운 \n" +
+                                            "데이트를 만들어보세요!"
+                                )
                             }
-                        }
-                    }
-                )
-
+                        },
+                        confirmButton = {
+                            Column(modifier = Modifier.padding(top = 32.dp)) {
+                                TextButton(onClick = {
+                                    navController.navigate("find_date_location") {
+                                        popUpTo("mission_screen") { inclusive = true }
+                                    }
+                                    showSecondDialog = false
+                                }) {
+                                    Text("데이트 장소 찾으러 가기")
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(600.dp)
+                    )
+                }
             }
         }
     )
 }
 
-
+@Serializable
+data class Mission(
+    val title: String,
+    val location: String,
+    val description: String
+)
 
 @Composable
 fun MissionSelectionCard(
-    missions: List<Mission>,
-    onMissionSelected: (Mission) -> Unit
+    missions: List<String>,
+    missionDetails: Map<String, Pair<String, String>>,
+    refreshCount: Int,
+    remainingTime: Int,
+    onMissionSelected: (String) -> Unit,
+    onRefresh: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-
-        Text(
-            text = "추천 미션",
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
+//        Text(text = "은영이와 철구\n" + "D + 85 ❤\n\n", style = MaterialTheme.typography.headlineSmall)
+//        Spacer(modifier = Modifier.height(16.dp))
 
         missions.forEach { mission ->
             MissionCard(
-                mission = mission,
+                mission = Mission(
+                    title = mission,
+                    location = missionDetails[mission]?.first ?: "",
+                    description = missionDetails[mission]?.second ?: ""
+                ),
+                navController = null,
                 onMissionSelected = { onMissionSelected(mission) }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -362,9 +241,15 @@ fun MissionSelectionCard(
 @Composable
 fun MissionCard(
     mission: Mission,
+    navController: NavController?,
     onMissionSelected: () -> Unit
 ) {
-    val imageCount = mission.environment
+    val imageCount = when (mission.title) {
+        "상남자/상여자 되기" -> 2
+        "고요한 저녁 미션!" -> 1
+        "실내 활동 미션 1" -> 3
+        else -> 0
+    }
 
     Card(
         modifier = Modifier
@@ -405,3 +290,4 @@ fun MissionCard(
         }
     }
 }
+

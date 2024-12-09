@@ -1,167 +1,113 @@
-package com.example.myadventure.ui.functions
+package com.example.myadventure.ui.screens
 
+
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import com.example.myadventure.model.Record
-import com.example.myadventure.viewmodel.RecordViewModel
-import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+
 
 @Composable
-fun DiaryScreens(navController: NavController, recordViewModel: RecordViewModel) {
+fun DiaryScreens(navController: NavController) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val records by recordViewModel.records.collectAsState(initial = emptyList())
+    val diaryEntries = remember { mutableStateListOf<DiaryEntry>() }
 
-    // Load records from the local database or source
+    // 파일 목록을 불러와서 diaryEntries 리스트에 추가
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            recordViewModel.loadRecordsFromLocal(context)
-        }
+        diaryEntries.clear()
+        diaryEntries.addAll(loadDiaryEntries(context))
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(
-            text = "Diary",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(records) { record ->
-                DiaryEntryCard(record)
-            }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(diaryEntries) { entry ->
+            DiaryEntryCard(entry)
         }
     }
 }
 
+// 다이어리 항목 데이터 클래스
+data class DiaryEntry(val imageUri: Uri, val date: String, val missionName: String, val comment: String)
+
+// 파일에서 다이어리 항목을 불러오는 함수
+fun loadDiaryEntries(context: Context): List<DiaryEntry> {
+    val entries = mutableListOf<DiaryEntry>()
+    val filesDir = context.filesDir
+    val files = filesDir.listFiles { file -> file.name.startsWith("diary_entry_") && file.extension == "jpg" }
+
+    files?.forEach { file ->
+        val uri = Uri.fromFile(file)
+        val metadata = file.nameWithoutExtension.split("_")
+        val date = metadata.getOrNull(2) ?: "Unknown Date"
+        val missionName = metadata.getOrNull(3) ?: "Unknown Mission"
+        val comment = metadata.getOrNull(4) ?: "No Comment"
+        entries.add(DiaryEntry(uri, date, missionName, comment))
+    }
+    return entries
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiaryEntryCard(record: Record) {
+fun DiaryEntryCard(entry: DiaryEntry) {
     var showDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
-            .padding(10.dp)
-            .clickable { showDialog = true }
             .fillMaxWidth()
-            .background(Color.White),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+            .clickable { showDialog = true }
+            .padding(8.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            val context = LocalContext.current
-            val bitmap = try {
-                BitmapFactory.decodeFile(Uri.parse(record.image).path)
-            } catch (e: Exception) {
-                null
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // 이미지 미리보기
+            Image(
+                bitmap = BitmapFactory.decodeFile(entry.imageUri.path).asImageBitmap(),
+                contentDescription = "Diary Image",
+                modifier = Modifier.size(80.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(text = entry.date, style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = entry.missionName, style = MaterialTheme.typography.bodySmall)
             }
-
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Diary Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(5f / 7f)
-                )
-            } else {
-                // Placeholder image
-                Image(
-                    painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    contentDescription = "Default Diary Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(5f / 7f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = record.timestamp.toString(), style = MaterialTheme.typography.bodyMedium)
-            Text(text = record.title, style = MaterialTheme.typography.bodySmall)
         }
     }
 
+    // 다이어리 항목 팝업
     if (showDialog) {
-        Dialog(
-            onDismissRequest = { showDialog = false }
-        ) {
+        Dialog(onDismissRequest = { showDialog = false }) {
             Card(
-                modifier = Modifier.padding(50.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                )
+                modifier = Modifier.padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    val context = LocalContext.current
-                    val dialogBitmap = try {
-                        BitmapFactory.decodeFile(Uri.parse(record.image).path)
-                    } catch (e: Exception) {
-                        null
-                    }
-
-                    dialogBitmap?.let {
-                        Image(
-                            bitmap = it.asImageBitmap(),
-                            contentDescription = "Diary Image (Dialog)",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
-                        )
-                    }
-                    Text(text = record.title, style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(text = record.description, style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.height(18.dp))
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        bitmap = BitmapFactory.decodeFile(entry.imageUri.path).asImageBitmap(),
+                        contentDescription = "Diary Image",
+                        modifier = Modifier.size(200.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = entry.date, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = entry.missionName, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = entry.comment, style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { showDialog = false }) {
                         Text("닫기")
                     }
@@ -169,4 +115,11 @@ fun DiaryEntryCard(record: Record) {
             }
         }
     }
+}
+
+
+@Preview
+@Composable
+fun PreviewDiaryScreen(){
+    DiaryScreens(navController = NavController(LocalContext.current))
 }

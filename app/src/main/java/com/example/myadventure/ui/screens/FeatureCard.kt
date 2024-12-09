@@ -1,4 +1,4 @@
-package com.example.myadventure.ui.screens.card
+package com.example.myadventure.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -41,37 +41,5 @@ fun FeatureCard(navController: NavController, route: String, text: String, backg
                 modifier = Modifier.align(Alignment.Center)
             )
         }
-    }
-}
-
-data class Feature(
-    val route: String,
-    val text: String,
-    val backgroundRes: Int
-)
-
-
-@Composable
-fun FeatureCardRow(
-    navController: NavController,
-    firstFeature: Feature,
-    secondFeature: Feature
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        FeatureCard(
-            navController = navController,
-            route = firstFeature.route,
-            text = firstFeature.text,
-            backgroundRes = firstFeature.backgroundRes
-        )
-        FeatureCard(
-            navController = navController,
-            route = secondFeature.route,
-            text = secondFeature.text,
-            backgroundRes = secondFeature.backgroundRes
-        )
     }
 }

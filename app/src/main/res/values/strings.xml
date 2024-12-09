@@ -1,6 +1,4 @@
 <resources>
     <string name="app_name">My Adventure</string>
-
-    <string name="default_web_client_id">"334028209671-jpqua8hgbe6g8nc61vjeqlbbpcev6gpc.apps.googleusercontent.com"</string>
     <string name="google_login_client_id">YOUR_CLIENT_ID_HERE</string>
 </resources>

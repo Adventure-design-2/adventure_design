@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyAdventureTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "signup_screen") { // 시작 화면을 MainScreen으로 설정
+                NavHost(navController = navController, startDestination = "signup_screen") { // 시작 화면 위치
                     composable("MainScreen") {
                         MainScreen(navController = navController)
                     }

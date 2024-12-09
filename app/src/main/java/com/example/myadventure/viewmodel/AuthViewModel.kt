@@ -188,12 +188,32 @@ class AuthViewModel : ViewModel() {
                 return false
             }
 
-            val partnerName = snapshot.documents[1].getString("name") ?: ""
+            // 첫 번째 문서에서 이름과 UID 가져오기
+            val partnerDocument = snapshot.documents.firstOrNull()
+            val partnerName = partnerDocument?.getString("name") ?: ""
+            val partnerUid = partnerDocument?.id ?: ""
 
+            if (partnerUid.isEmpty()) {
+                return false
+            }
 
-            // Update user profiles with the shared ID
+            // 사용자 프로필 업데이트
             firestore.collection("users").document(userUid)
-                .update("partnerName", partnerName)
+                .update(
+                    mapOf(
+                        "partnerName" to partnerName,
+                        "partnerUid" to partnerUid
+                    )
+                )
+                .await()
+
+            // 상대방 프로필에도 업데이트 (현재 사용자의 UID를 partnerUid로 설정)
+            firestore.collection("users").document(partnerUid)
+                .update(
+                    mapOf(
+                        "partnerUid" to userUid
+                    )
+                )
                 .await()
 
             true
@@ -202,6 +222,8 @@ class AuthViewModel : ViewModel() {
             false
         }
     }
+
+
 
 
 }

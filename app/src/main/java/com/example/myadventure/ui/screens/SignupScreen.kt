@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
-import com.example.myadventure.data.AuthManager
 import com.example.myadventure.viewmodel.AuthState
 import com.example.myadventure.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn

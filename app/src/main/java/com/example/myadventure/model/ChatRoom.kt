@@ -7,6 +7,6 @@ data class ChatRoom(
     val user2: String = "",
     val timestamp: Long = System.currentTimeMillis(),
     val mission: Mission? = null,
-    val imageUrl: String? = null // 채팅방 대표 이미지 URL
+    val imageUrl: List<String> = emptyList() // 채팅방 대표 이미지 URL
 )
 

@@ -1,6 +1,7 @@
 package com.example.myadventure.ui.screens
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -25,6 +27,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.getValue
 import com.google.firebase.storage.FirebaseStorage
 
 @Composable
@@ -74,6 +77,7 @@ fun ChatRoomScreen(
         })
     }
 
+    val context = LocalContext.current
     // 이미지 선택 런처
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -90,16 +94,31 @@ fun ChatRoomScreen(
                             imageUrl = downloadUri.toString()
                         )
 
+                        // Firebase에 새 메시지 추가
                         database.child("chatRooms")
                             .child(roomId)
                             .child("messages")
                             .child(newMessage.id)
                             .setValue(newMessage)
+                        // 기존 imageUrl 리스트를 가져와 업데이트
+                        val chatRoomRef = database.child("chatRooms").child(roomId)
+                        chatRoomRef.child("imageUrl").get().addOnSuccessListener { snapshot ->
+                            val existingImageUrls = snapshot.getValue<List<String>>() ?: emptyList()
+                            val updatedImageUrls = existingImageUrls + downloadUri.toString()
+
+                            // 업데이트된 imageUrl 리스트를 Firebase에 저장
+                            chatRoomRef.child("imageUrl").setValue(updatedImageUrls)
+                        }.addOnFailureListener {
+                            Toast.makeText(context, "이미지 URL 업데이트 실패", Toast.LENGTH_SHORT).show()
+                        }
                     }
+                }.addOnFailureListener {
+                    Toast.makeText(context, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     )
+
 
     Column(
         modifier = Modifier
@@ -127,8 +146,8 @@ fun ChatRoomScreen(
             // 미션 완료 버튼
             Button(
                 onClick = {
-                    navController.navigate("chat_room_list_screen") {
-                        popUpTo("chat_room_screen/$roomId") { inclusive = true }
+                    navController.navigate("diary_screen") {
+                        popUpTo("chat_room_screen/$roomId") { inclusive = false }
                     }
                 },
                 modifier = Modifier.align(Alignment.End)
@@ -159,12 +178,10 @@ fun ChatRoomScreen(
                             )
                             .padding(8.dp)
                     ) {
-                        message.message?.let {
-                            Text(
-                                text = it,
-                                color = if (isCurrentUser) Color.Black else Color.DarkGray
-                            )
-                        }
+                        Text(
+                            text = message.message,
+                            color = if (isCurrentUser) Color.Black else Color.DarkGray
+                        )
                         message.imageUrl?.let { imageUrl ->
                             Image(
                                 painter = rememberAsyncImagePainter(imageUrl),

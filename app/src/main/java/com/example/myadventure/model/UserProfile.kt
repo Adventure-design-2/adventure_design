@@ -9,5 +9,6 @@ data class UserProfile(
     val inviteCode: String = "", // 초대 코드
     val activeRooms: List<String> = emptyList(), // 참여 중인 기록 방 ID
     val lastSeen: Long = System.currentTimeMillis(), // 마지막 활동 시간
-    val partnerName: String = ""  // 상대방 이름을 추가
+    val partnerName: String = "",  // 상대방 이름을 추가
+    val dDay: String = "" // 사용자 기념일 (YYYY-MM-DD 형식)
 )

@@ -44,12 +44,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.myadventure.R
 import com.example.myadventure.data.AuthManager
 import com.example.myadventure.viewmodel.AuthState
@@ -70,12 +73,12 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.ic_app_logo2_1),
+            painter = painterResource(id = R.drawable.app_logo4_1),
             contentDescription = "Logo",
             modifier = Modifier.size(170.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(70.dp))
 
         // Tab Row for switching between Login and Sign up
         TabRow(
@@ -105,7 +108,9 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
 }
 
 @Composable
+
 fun SignUpContent(navController: NavController, viewModel: AuthViewModel) {
+
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

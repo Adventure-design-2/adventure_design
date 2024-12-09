@@ -3,22 +3,30 @@ package com.example.myadventure
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
+
+import androidx.activity.viewModels
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.ui.functions.DiaryScreens
 import com.example.myadventure.ui.screens.*
 import com.example.myadventure.viewmodel.*
 
+import com.example.myadventure.ui.screens.*
+import com.example.myadventure.ui.theme.MyAdventureTheme
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -133,6 +141,7 @@ fun AppNavHost(
                 viewModel = authViewModel,
                 onRoomSelected = { roomId ->
                     navController.navigate("chat_room_screen/$roomId")
+
                 }
             )
         }
@@ -141,4 +150,3 @@ fun AppNavHost(
 
 
 }
-

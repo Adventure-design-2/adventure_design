@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,12 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.example.myadventure.R
+
 import com.example.myadventure.data.ChatRoomRepository
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.model.Mission
@@ -54,6 +55,9 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 
+import kotlinx.coroutines.delay
+
+
 @Composable
 fun MissionScreen(
     navController: NavHostController,
@@ -61,6 +65,9 @@ fun MissionScreen(
     dDayResult: String // D-Day 값을 전달받음
 ) {
     val recommendedMissions = remember { repository.getRecommendedMissions() }
+    ////////////////////////////// 참고해 //////////////////////////
+//    Text(text = "D-Day 결과: $dDayResult") // 전달된 값을 표시
+    val uiState by viewModel.uiState.collectAsState()
     var showSelectDialog by remember { mutableStateOf(false) }
     var showSecondDialog by remember { mutableStateOf(false) }
     var selectedMission by remember { mutableStateOf<Mission?>(null) }
@@ -113,19 +120,39 @@ fun MissionScreen(
         }
     }
 
+    // 이미지 전환을 위한 상태
+    var currentImage by remember { mutableStateOf(R.drawable.mission_char) }
+
+    // 1초 간격으로 이미지를 전환하는 효과
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentImage = if (currentImage == R.drawable.mission_char) {
+                R.drawable.mission_char_1
+            } else {
+                R.drawable.mission_char
+            }
+            delay(230) // 1초 지연값(1000)
+        }
+    }
+
     Scaffold(
         containerColor = Color(0x5EFFC1E3),
         bottomBar = {
             BottomNavigationBar(navController = navController)
         },
         content = { contentPadding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(16.dp)
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+
+              Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = "은영이와 철구\n $dDayResult ❤\n\n",
@@ -153,9 +180,30 @@ fun MissionScreen(
                     onMissionSelected = { mission ->
                         selectedMission = mission
                         showSelectDialog = true
-                    }
+                    },
+
+              
+                        refreshCount = 3,
+                        remainingTime = 300,
+                        onMissionSelected = { mission ->
+                            selectedMission = mission
+                            showSelectDialog = true
+                        },
+                        onRefresh = {}
+                    )
+                }
+
+                // 화면 오른쪽 아래에서 1초 간격으로 전환되는 캐릭터 이미지
+                Image(
+                    painter = painterResource(id = currentImage),
+                    contentDescription = "Mission Character",
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .size(170.dp) // 캐릭터 크기 조절
+
                 )
-            }
+
 
             // 미션 선택 확인 Dialog
             if (showSelectDialog) {
@@ -194,10 +242,11 @@ fun MissionScreen(
                     dismissButton = {
                         TextButton(onClick = { showSelectDialog = false }) {
                             Text("아니요")
+
                         }
-                    }
-                )
-            }
+                    )
+                }
+
 
             // 두 번째 AlertDialog
             if (showSecondDialog && newlyCreatedChatRoomId != null) {
@@ -222,8 +271,22 @@ fun MissionScreen(
                                     painter = painterResource(id = R.drawable.ic_delete),
                                     contentDescription = "닫기",
                                     tint = Color.Unspecified
+
                                 )
+                                IconButton(
+                                    onClick = { showSecondDialog = false },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_delete),
+                                        contentDescription = "닫기",
+                                        tint = Color.Unspecified
+                                    )
+                                }
                             }
+
                         }
                     },
                     text = {
@@ -246,7 +309,7 @@ fun MissionScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(400.dp)
+                                    .height(600.dp)
                             )
 
                         }
@@ -264,6 +327,7 @@ fun MissionScreen(
                         }
                     }
                 )
+
             }
         }
     )
@@ -277,11 +341,13 @@ fun MissionSelectionCard(
     onMissionSelected: (Mission) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
+
         Text(
             text = "추천 미션",
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(modifier = Modifier.height(16.dp))
+
 
         missions.forEach { mission ->
             MissionCard(
@@ -307,8 +373,8 @@ fun MissionCard(
             .clickable { onMissionSelected() },
         colors = CardDefaults.cardColors(containerColor = Color(0x59CFC3CE)),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(0.0001.dp), // 옅은 그림자 효과
-        border = BorderStroke(1.dp, Color(0xFFCFC3CE)) // 테두리 추가
+        elevation = CardDefaults.cardElevation(0.0001.dp),
+        border = BorderStroke(1.dp, Color(0xFFCFC3CE))
     ) {
         Row(
             modifier = Modifier
@@ -322,7 +388,6 @@ fun MissionCard(
                 color = Color(0xFF6D4C41),
                 modifier = Modifier.weight(1f)
             )
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.Top,

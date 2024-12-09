@@ -84,9 +84,3 @@ fun MainScreen(navController: NavController, dDayResult: String) {
     }
 }
 
-@Preview
-@Composable
-fun PreviewMainScreen() {
-    val navController = rememberNavController()
-    MainScreen(navController = navController, dDayResult = "D+3") // 미리보기에서 예제 값 전달
-}

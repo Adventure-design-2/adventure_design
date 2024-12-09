@@ -1,6 +1,5 @@
 package com.example.myadventure.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,9 +20,7 @@ import com.example.myadventure.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController) {
-    val dDayResult = "D+3" // 예제: 동적 값 (실제 계산 로직으로 변경 가능)
-
+fun MainScreen(navController: NavController, dDayResult: String) {
     // 전체 화면 배경 색
     Box(
         modifier = Modifier
@@ -48,6 +44,15 @@ fun MainScreen(navController: NavController) {
                 modifier = Modifier.padding(horizontal = 16.dp),
                 fontWeight = FontWeight.Bold
             )
+
+//            // D-Day 결과 표시
+//            Text(
+//                text = "현재 D-Day 상태: $dDayResult",
+//                fontSize = 16.sp,
+//                color = Color.DarkGray,
+//                textAlign = TextAlign.Center,
+//                modifier = Modifier.padding(horizontal = 16.dp)
+//            )
 
             // 캐릭터 이미지
             Image(
@@ -75,16 +80,14 @@ fun MainScreen(navController: NavController) {
                 ) {
                     Text(text = "미션 하러가기", fontSize = 16.sp)
                 }
-
             }
         }
     }
 }
 
-
 @Preview
 @Composable
-fun MainScreen() {
+fun PreviewMainScreen() {
     val navController = rememberNavController()
-    MainScreen(navController = navController)
+    MainScreen(navController = navController, dDayResult = "D+3") // 미리보기에서 예제 값 전달
 }

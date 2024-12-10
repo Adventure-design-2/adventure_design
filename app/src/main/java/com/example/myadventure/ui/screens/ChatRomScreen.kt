@@ -61,12 +61,19 @@ fun ChatRoomScreen(
         currentUser = auth.currentUser?.uid ?: ""
     }
 
-    // 미션 제목 로드
+    // 미션 제목 로드 및 이미지 리스트 초기화
     LaunchedEffect(roomId) {
         val roomRef = database.child("chatRooms").child(roomId)
         roomRef.child("mission").get().addOnSuccessListener { snapshot ->
             val mission = snapshot.child("title").getValue(String::class.java)
             missionTitle = mission ?: "미션 제목 없음"
+        }
+
+        // 이미지 리스트 로드
+        roomRef.child("imageUrl").get().addOnSuccessListener { snapshot ->
+            val urls = snapshot.children.mapNotNull { it.getValue(String::class.java) }
+            imageUrls.clear()
+            imageUrls.addAll(urls)
         }
     }
 
@@ -111,6 +118,24 @@ fun ChatRoomScreen(
                             .child("messages")
                             .child(newMessage.id)
                             .setValue(newMessage)
+
+                        // 이미지 URL을 채팅방 imageUrl 필드에 추가
+                        database.child("chatRooms").child(roomId).child("imageUrl")
+                            .get().addOnSuccessListener { snapshot ->
+                                val currentUrls = snapshot.children.mapNotNull { it.getValue(String::class.java) }.toMutableList()
+                                currentUrls.add(downloadUri.toString())
+
+                                // 업데이트된 이미지 리스트 저장
+                                database.child("chatRooms").child(roomId).child("imageUrl")
+                                    .setValue(currentUrls)
+                                    .addOnSuccessListener {
+                                        imageUrls.add(downloadUri.toString()) // 로컬 상태 업데이트
+                                        Toast.makeText(context, "이미지 업로드 및 저장 완료", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .addOnFailureListener {
+                                        Toast.makeText(context, "이미지 URL 저장 실패", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
                     }
                 }.addOnFailureListener {
                     Toast.makeText(context, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
@@ -197,7 +222,9 @@ fun ChatRoomScreen(
                             )
                             .padding(8.dp)
                     ) {
-                        Text(text = message.message, color = if (isCurrentUser) Color.White else Color.Black)
+                        if (message.message.isNotBlank()) { // 공백 메시지 전송 방지
+                            Text(text = message.message, color = if (isCurrentUser) Color.White else Color.Black)
+                        }
                     }
                 }
             }
@@ -228,11 +255,11 @@ fun ChatRoomScreen(
             // 전송 버튼
             Button(
                 onClick = {
-                    if (inputMessage.isNotBlank()) {
+                    if (inputMessage.trim().isNotEmpty()) { // 공백 메시지 제한
                         val newMessage = ChatMessage(
                             id = database.push().key ?: "",
                             senderId = currentUser,
-                            message = inputMessage
+                            message = inputMessage.trim()
                         )
                         database.child("chatRooms").child(roomId).child("messages")
                             .child(newMessage.id).setValue(newMessage)
@@ -281,4 +308,5 @@ fun ChatRoomScreen(
         }
     }
 }
+
 

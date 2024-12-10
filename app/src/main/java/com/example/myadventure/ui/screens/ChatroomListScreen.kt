@@ -39,6 +39,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.model.ChatRoom
 import com.example.myadventure.viewmodel.AuthViewModel
 import com.google.firebase.database.FirebaseDatabase
+import android.util.Log // 로그를 위한 import
+import com.example.myadventure.R
 
 
 @Composable
@@ -59,26 +61,29 @@ fun ChatRoomListScreen(
             if (currentUser.isNotBlank()) {
                 val database = FirebaseDatabase.getInstance().reference
                 database.child("chatRooms")
-                    .orderByChild("timestamp") // `timestamp` 필드를 기준으로 정렬
+                    .orderByChild("timestamp")
                     .get()
                     .addOnSuccessListener { snapshot ->
                         val rooms = snapshot.children.mapNotNull { it.getValue(ChatRoom::class.java) }
                             .filter { it.user1 == currentUser || it.user2 == currentUser }
-                            .sortedByDescending { it.timestamp } // 가장 최근 기록이 맨 위로 오도록 정렬
+                            .sortedByDescending { it.timestamp }
                         chatRooms.clear()
                         chatRooms.addAll(rooms)
                         isLoading = false
+                        Log.d("ChatRoomListScreen", "Loaded chat rooms: $rooms")
                     }
-                    .addOnFailureListener {
+                    .addOnFailureListener { exception ->
                         Toast.makeText(
                             context,
-                            "추억 불러오기 실패: ${it.message}",
+                            "추억 불러오기 실패: ${exception.message}",
                             Toast.LENGTH_SHORT
                         ).show()
+                        Log.e("ChatRoomListScreen", "Failed to load chat rooms", exception)
                         isLoading = false
                     }
             } else {
                 Toast.makeText(context, "사용자 정보를 가져올 수 없습니다.", Toast.LENGTH_SHORT).show()
+                Log.w("ChatRoomListScreen", "No user profile loaded.")
                 isLoading = false
             }
         }
@@ -93,7 +98,7 @@ fun ChatRoomListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFFFF4F7)) // 핑크 배경색
+                    .background(Color(0xFFFFF4F7))
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
@@ -134,7 +139,7 @@ fun ChatRoomListScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 60.dp) // 바텀 네비게이션 바 공간 확보
+                            .padding(bottom = 60.dp)
                     ) {
                         items(chatRooms) { chatRoom ->
                             ChatRoomPolaroidCard(chatRoom = chatRoom) {
@@ -147,7 +152,6 @@ fun ChatRoomListScreen(
         }
     )
 }
-
 
 @Composable
 fun ChatRoomPolaroidCard(
@@ -185,22 +189,28 @@ fun ChatRoomPolaroidCard(
                         .aspectRatio(1f)
                 )
 
-                // Coil 에러 확인
+                // 이미지 로드 상태 로그
                 LaunchedEffect(randomImageUrl) {
                     painter.state.let { state ->
-                        if (state is AsyncImagePainter.State.Error) {
-                            Toast.makeText(context, "이미지 로드 실패: $randomImageUrl", Toast.LENGTH_SHORT).show()
+                        when (state) {
+                            is AsyncImagePainter.State.Success -> Log.d("ChatRoomPolaroidCard", "Image loaded successfully: $randomImageUrl")
+                            is AsyncImagePainter.State.Error -> {
+                                Log.e("ChatRoomPolaroidCard", "Failed to load image: $randomImageUrl")
+                                Toast.makeText(context, "이미지 로드 실패: $randomImageUrl", Toast.LENGTH_SHORT).show()
+                            }
+                            else -> Unit
                         }
                     }
                 }
             } else {
                 Image(
-                    painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                    contentDescription = "Default Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                )
+                painter = painterResource(id = R.drawable.app_logo4_1), // 프로젝트 내 PNG 파일
+                contentDescription = "Default Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+            )
+
             }
         }
 

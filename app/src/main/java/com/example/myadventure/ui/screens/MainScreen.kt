@@ -79,7 +79,7 @@ fun MainScreen(navController: NavController) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC6D3)) // 분홍색 버튼
                 ) {
-                    Text(text = "기록지 보러가기", fontSize = 16.sp)
+                    Text(text = "추억 보러가기", fontSize = 16.sp)
                 }
 
                 Button(

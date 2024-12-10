@@ -3,7 +3,6 @@ package com.example.myadventure.model
 data class UserProfile(
     val uid: String = "",
     val name: String = "",
-    val bio: String = "",
     val imageUrl: String = "",
     val partnerUid: String = "", // 연결된 파트너 ID
     val inviteCode: String = "", // 초대 코드

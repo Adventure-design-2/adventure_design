@@ -93,7 +93,7 @@
   {
     "title": "요리와 소풍의 완벽 조합",
     "environment": 3,
-    "locationTag": ["야외"],
+    "locationTag": ["공원", "강"],
     "detail": "유튜브 영상을 보고 음식을 만들고 \n소풍 가서 함께 맛있게 \n나눠 먹는 하루를 만들어보세요.",
     "completedCount": 0,
     "action": "cook_and_picnic"
@@ -149,7 +149,7 @@
   {
     "title": "환경을 노래로 즐기기",
     "environment": 5,
-    "locationTag": ["집"],
+    "locationTag": ["노래방"],
     "detail": "환경 관련 단어가 들어간 노래를 \n찾아 완창하며 함께 웃고 \n즐거운 시간을 보내세요.",
     "completedCount": 0,
     "action": "sing_environment_song"
@@ -157,7 +157,7 @@
   {
     "title": "편지로 마음 전하기",
     "environment": 3,
-    "locationTag": ["집"],
+    "locationTag": ["공원","도서관"],
     "detail": "서로에게 짧은 손편지를 써보세요. \n직접 손으로 쓰는 글씨로 \n진심을 전하며 추억을 만들어보세요.",
     "completedCount": 0,
     "action": "write_letter"
@@ -165,7 +165,7 @@
   {
     "title": "밤하늘 별자리 관찰",
     "environment": 4,
-    "locationTag": ["야외"],
+    "locationTag": ["별"],
     "detail": "밤하늘을 보며 별자리를 찾아보고 \n서로의 이야기를 나누는 시간을 \n가져보세요. 함께 누워 하늘을 \n바라보는 것도 좋습니다.",
     "completedCount": 0,
     "action": "stargazing"
@@ -173,7 +173,7 @@
   {
     "title": "직접 만든 핫초코 나눠 마시기",
     "environment": 3,
-    "locationTag": ["집"],
+    "locationTag": ["강변"],
     "detail": "핫초코를 함께 만들어 보세요. \n마시며 서로의 취향에 대해 \n이야기를 나누고 따뜻한 시간을 \n보내보세요.",
     "completedCount": 0,
     "action": "make_hot_chocolate"
@@ -189,18 +189,10 @@
   {
     "title": "전통놀이로 데이트하기",
     "environment": 3,
-    "locationTag": ["야외"],
+    "locationTag": ["공원","민속촌"],
     "detail": "전통놀이인 윷놀이, 제기차기 등을 \n준비해서 서로 대결하며 즐거운 \n시간을 보내보세요. 어린 시절의 \n추억을 떠올리게 될 거예요.",
     "completedCount": 0,
     "action": "play_traditional_games"
-  },
-  {
-    "title": "거리에서 즉흥 춤 도전",
-    "environment": 2,
-    "locationTag": ["도심"],
-    "detail": "길거리에서 음악을 틀고 즉흥으로 \n춤을 춰보세요. 부끄럽지만 새로운 \n추억을 만들기에 완벽한 미션입니다.",
-    "completedCount": 0,
-    "action": "dance_outdoor"
   },
   {
     "title": "책 없이 즉석에서 동화 만들기",
@@ -213,7 +205,7 @@
   {
     "title": "옷장 속 옷으로 커플 의상 코디",
     "environment": 3,
-    "locationTag": ["집"],
+    "locationTag": ["카페, "],
     "detail": "서로의 옷장에서 옷을 골라 \n커플 의상을 만들어보세요. \n완성 후 패션쇼도 열어보세요!",
     "completedCount": 0,
     "action": "style_couple_outfit"
@@ -221,7 +213,7 @@
   {
     "title": "자전거 타고 도시 탐험",
     "environment": 4,
-    "locationTag": ["도시"],
+    "locationTag": ["자전거길"],
     "detail": "자전거를 타고 도시 곳곳을 \n탐험하며 숨겨진 장소를 \n찾아보세요. 교통수단 대신 \n자전거를 사용해 탄소를 줄여요.",
     "completedCount": 0,
     "action": "bike_explore"
@@ -237,7 +229,7 @@
   {
     "title": "태양광 랜턴 캠핑",
     "environment": 5,
-    "locationTag": ["야외"],
+    "locationTag": ["캠핑장"],
     "detail": "태양광 랜턴을 준비해 \n캠핑을 즐기며 전기를 \n절약하고 자연을 가까이에서 \n느껴보세요.",
     "completedCount": 0,
     "action": "solar_camping"

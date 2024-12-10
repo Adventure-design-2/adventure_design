@@ -104,7 +104,7 @@ fun ProfileScreen(
             // 프로필 이미지
             Box(
                 modifier = Modifier
-                    .size(220.dp) // 사진 크기 증가
+                    .size(220.dp)
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -112,10 +112,10 @@ fun ProfileScreen(
                     model = imageUrl,
                     contentDescription = "프로필 이미지",
                     modifier = Modifier
-                        .size(220.dp) // 원형에 맞게 조정
-                        .clip(androidx.compose.foundation.shape.CircleShape) // 원형으로 자르기
+                        .size(220.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
                         .background(Color.LightGray),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop // 이미지 크롭
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             }
 
@@ -192,9 +192,27 @@ fun ProfileScreen(
             ) {
                 Text(if (isLoading) "저장 중..." else "프로필 저장")
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 로그아웃 버튼
+            Button(
+                onClick = {
+                    viewModel.logout() // 로그아웃 처리
+                    onLogout() // 로그아웃 후 콜백 호출
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2)),
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(40.dp)
+                    .align(alignment = Alignment.End)
+            ) {
+                Text("로그아웃", fontSize = 16.sp)
+            }
         }
     }
 }
+
 
 
 

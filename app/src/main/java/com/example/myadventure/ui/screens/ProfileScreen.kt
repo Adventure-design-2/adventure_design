@@ -1,18 +1,26 @@
 package com.example.myadventure.ui.screens
 
+import DDayDataStore
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.myadventure.model.UserProfile
@@ -26,9 +34,10 @@ fun ProfileScreen(
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
+    val dDayDataStore = DDayDataStore()
     var name by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf("") }
+    var dDay by remember { mutableStateOf("D-Day 설정 안 됨") }
     var isLoading by remember { mutableStateOf(false) }
 
     val storage = FirebaseStorage.getInstance()
@@ -39,9 +48,12 @@ fun ProfileScreen(
         viewModel.loadUserProfile { profile ->
             profile?.let {
                 name = it.name
-                bio = it.bio
                 imageUrl = it.imageUrl
             }
+        }
+        // D-Day 로드
+        dDayDataStore.getDDayFlow(context).collect { savedDDay ->
+            dDay = savedDDay?.let { calculateDDay(it) } ?: "D-Day 설정 안 됨"
         }
     }
 
@@ -67,111 +79,124 @@ fun ProfileScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "프로필 설정", modifier = Modifier.padding(bottom = 16.dp))
-
-        // 유저 초대 버튼
-        Button(onClick = { navController.navigate("couplecode_screen") }, modifier = Modifier.fillMaxWidth()) {
-            Text("유저 초대")
+    Scaffold(
+        containerColor = Color(0xFFFFF5F8), // 분홍 배경색
+        bottomBar = {
+            BottomNavigationBar(navController = navController) // BottomNavigationBar 호출
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 프로필 이미지 표시
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = "프로필 이미지",
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .size(100.dp)
-                .padding(8.dp)
-        )
-
-        Button(
-            onClick = { imagePickerLauncher.launch("image/*") },
-            modifier = Modifier.fillMaxWidth()
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("이미지 선택")
-        }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // 상단에 "프로필" 텍스트
+            Text(
+                text = "프로필",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
 
-        // 이름 입력 필드
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("이름") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 소개 입력 필드
-        OutlinedTextField(
-            value = bio,
-            onValueChange = { bio = it },
-            label = { Text("소개") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 프로필 저장 버튼
-        Button(
-            onClick = {
-                isLoading = true
-                val profile = UserProfile(
-                    uid = viewModel.getCurrentUserId(),
-                    name = name,
-                    bio = bio,
-                    imageUrl = imageUrl
+            // 프로필 이미지
+            Box(
+                modifier = Modifier
+                    .size(220.dp) // 사진 크기 증가
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "프로필 이미지",
+                    modifier = Modifier
+                        .size(220.dp) // 원형에 맞게 조정
+                        .clip(androidx.compose.foundation.shape.CircleShape) // 원형으로 자르기
+                        .background(Color.LightGray),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop // 이미지 크롭
                 )
-                viewModel.saveUserProfile(profile) { success ->
-                    isLoading = false
-                    if (success) {
-                        Toast.makeText(context, "프로필이 저장되었습니다!", Toast.LENGTH_SHORT).show()
-                        // 저장 후 프로필 다시 로드
-                        viewModel.loadUserProfile { loadedProfile ->
-                            loadedProfile?.let {
-                                name = it.name
-                                bio = it.bio
-                                imageUrl = it.imageUrl
-                            }
-                        }
-                    } else {
-                        Toast.makeText(context, "프로필 저장에 실패했습니다!", Toast.LENGTH_SHORT).show()
-                    }
+            }
+
+            Button(
+                onClick = { imagePickerLauncher.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF8BBD0)),
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text("이미지 선택")
+            }
+
+            // 이름 입력 필드
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("이름") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // D-Day 표시 및 이동 버튼
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "D-Day: $dDay", fontSize = 16.sp)
+                Button(
+                    onClick = { navController.navigate("dday_screen") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF8BBD0)),
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    Text("변경", fontSize = 12.sp)
                 }
-            },
-            enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(if (isLoading) "저장 중..." else "프로필 저장")
-        }
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // 미션 페이지로 이동 버튼
-        Button(
-            onClick = { navController.navigate("mission_screen") },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("미션 페이지로 이동")
-        }
+            // 초대코드 이동 버튼
+            Button(
+                onClick = { navController.navigate("couplecode_screen") },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF8BBD0)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+            ) {
+                Text("초대코드 관리", fontSize = 16.sp)
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // 로그아웃 버튼
-        Button(
-            onClick = onLogout,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("로그아웃")
+            // 프로필 저장 버튼
+            Button(
+                onClick = {
+                    isLoading = true
+                    val profile = UserProfile(
+                        uid = viewModel.getCurrentUserId(),
+                        name = name,
+                        imageUrl = imageUrl
+                    )
+                    viewModel.saveUserProfile(profile) { success ->
+                        isLoading = false
+                        if (success) {
+                            Toast.makeText(context, "프로필이 저장되었습니다!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "프로필 저장에 실패했습니다!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF8BBD0)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (isLoading) "저장 중..." else "프로필 저장")
+            }
         }
     }
 }
+
+
+
+
+

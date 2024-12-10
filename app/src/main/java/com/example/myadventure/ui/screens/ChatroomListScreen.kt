@@ -5,7 +5,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -22,13 +29,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.myadventure.model.ChatRoom
 import com.example.myadventure.viewmodel.AuthViewModel
 import com.google.firebase.database.FirebaseDatabase
+
 
 @Composable
 fun ChatRoomListScreen(
@@ -48,10 +59,12 @@ fun ChatRoomListScreen(
             if (currentUser.isNotBlank()) {
                 val database = FirebaseDatabase.getInstance().reference
                 database.child("chatRooms")
+                    .orderByChild("timestamp") // `timestamp` 필드를 기준으로 정렬
                     .get()
                     .addOnSuccessListener { snapshot ->
                         val rooms = snapshot.children.mapNotNull { it.getValue(ChatRoom::class.java) }
                             .filter { it.user1 == currentUser || it.user2 == currentUser }
+                            .sortedByDescending { it.timestamp } // 가장 최근 기록이 맨 위로 오도록 정렬
                         chatRooms.clear()
                         chatRooms.addAll(rooms)
                         isLoading = false
@@ -72,7 +85,7 @@ fun ChatRoomListScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFFFFF4F7),
+        containerColor = Color(0xFFFFF4F7), // 핑크 배경색
         bottomBar = {
             BottomNavigationBar(navController = navController) // 바텀 네비게이션 바 추가
         },
@@ -80,7 +93,7 @@ fun ChatRoomListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFFFF4F7))
+                    .background(Color(0xFFFFF4F7)) // 핑크 배경색
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
@@ -108,7 +121,7 @@ fun ChatRoomListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "아직 추억이 없습니다!",
+                            text = "아직 추억이 없습니다!\n새로운 추억을 만들어보아요!!!",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.Black,
                             modifier = Modifier.padding(bottom = 16.dp)
@@ -119,7 +132,9 @@ fun ChatRoomListScreen(
                         columns = GridCells.Fixed(2),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 60.dp) // 바텀 네비게이션 바 공간 확보
                     ) {
                         items(chatRooms) { chatRoom ->
                             ChatRoomPolaroidCard(chatRoom = chatRoom) {
@@ -133,61 +148,73 @@ fun ChatRoomListScreen(
     )
 }
 
+
 @Composable
 fun ChatRoomPolaroidCard(
     chatRoom: ChatRoom,
     onClick: () -> Unit
 ) {
+    val randomImageUrl = chatRoom.imageUrl.randomOrNull()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
-            .clickable { onClick() }
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(150.dp)
+                .size(160.dp)
                 .background(Color.White)
-                .border(2.dp, Color.LightGray) // 경계선 추가
+                .border(width = 2.dp, color = Color.Gray)
         ) {
-            // 랜덤 이미지 선택
-            val randomImageUrl = chatRoom.imageUrl.randomOrNull() // 랜덤 URL 가져오기
-            val context = LocalContext.current
-            if (randomImageUrl != null) {
+            if (!randomImageUrl.isNullOrEmpty()) {
                 val painter = rememberAsyncImagePainter(
                     model = randomImageUrl,
-                    onError = { // 에러 처리: 기본 이미지 표시
-                        Toast.makeText(context, "이미지 로드 실패", Toast.LENGTH_SHORT).show()
-                    }
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery),
+                    error = painterResource(id = android.R.drawable.ic_menu_gallery)
                 )
+
                 Image(
                     painter = painter,
                     contentDescription = "Chat Room Image",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
                 )
+
+                // Coil 에러 확인
+                LaunchedEffect(randomImageUrl) {
+                    painter.state.let { state ->
+                        if (state is AsyncImagePainter.State.Error) {
+                            Toast.makeText(context, "이미지 로드 실패: $randomImageUrl", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             } else {
-                // 기본 이미지 표시
                 Image(
-                    painter = rememberAsyncImagePainter(model = android.R.drawable.ic_menu_gallery),
-                    contentDescription = "Default Chat Room Image",
+                    painter = painterResource(id = android.R.drawable.ic_menu_gallery),
+                    contentDescription = "Default Image",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
                 )
             }
         }
 
-        // 채팅방의 미션 제목 표시
+        // 채팅방 제목 표시
         Text(
             text = chatRoom.mission?.title ?: "추억",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Black,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            maxLines = 1
+            modifier = Modifier.padding(top = 8.dp)
         )
     }
 }
+
+
+
+
+

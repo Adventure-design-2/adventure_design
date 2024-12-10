@@ -40,7 +40,8 @@ class ChatRoomRepository {
                         name = "Mission: ${mission.title}",
                         user1 = user1,
                         user2 = user2,
-                        mission = mission
+                        mission = mission,
+                        timestamp = System.currentTimeMillis() // 현재 시간 기록
                     )
 
                     database.child("chatRooms").child(roomId).setValue(chatRoom)
@@ -90,7 +91,7 @@ class ChatRoomRepository {
                                 it.getValue(ChatRoom::class.java)
                             }.filter {
                                 it.user1 == userUid || it.user2 == userUid || it.user1 == partnerUid || it.user2 == partnerUid
-                            }
+                            }.sortedByDescending { it.timestamp } // 최신 채팅방이 맨 위로 오도록 정렬
                             onResult(chatRooms)
                         }.addOnFailureListener {
                             onResult(emptyList())

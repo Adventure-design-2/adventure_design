@@ -1,34 +1,263 @@
 [
   {
-    "title": "1",
+    "title": "감성 충전! 둘만의 문화 데이트",
+    "environment": 2,
+    "locationTag": ["도심"],
+    "detail": "주변에서 열리는 공연이나 전시를 \n찾아보고 함께 관람하세요. \n이동은 걷거나 버스를 타며 \n도시의 풍경도 즐겨보세요.",
+    "completedCount": 0,
+    "action": "visit_exhibition"
+  }
+,
+  {
+    "title": "커플 내복 챌린지!",
+    "environment": 4,
+    "locationTag": ["집"],
+    "detail": "커플 내복을 맞춰 입고 \n따뜻한 시간을 보내세요. \n난방비도 절약되고 환경보호에도 \n작은 도움이 됩니다.",
+    "completedCount": 0,
+    "action": "wear_thermal"
+  }
+,
+  {
+    "title": "함께 만드는 따뜻한 손길",
+    "environment": 4,
+    "locationTag": ["집"],
+    "detail": "뜨개질로 모자나 장갑을 \n직접 만들어보세요. \n완성 후 선물하며 따뜻함을 \n서로 느껴보는 시간을 가져요.",
+    "completedCount": 0,
+    "action": "knit_together"
+  }
+,
+  {
+    "title": "몰래연애! 아이돌 커플 체험",
     "environment": 1,
-    "locationTag": ["공원", "자연"],
-    "detail": "1",
+    "locationTag": ["카페"],
+    "detail": "아이돌 커플이 된 것처럼 \n주변을 신경 쓰며 데이트하세요. \n사소한 눈빛과 속삭임으로 \n몰래 연애의 설렘을 느껴보세요.",
     "completedCount": 0,
-    "action": "walk_action"
+    "action": "secret_date"
   },
   {
-    "title": "2",
+    "title": "30분 미션! 커플티 찾기",
+    "environment": 3,
+    "locationTag": ["시장"],
+    "detail": "재래시장에서 각자 돌아다니며 \n30분 안에 커플티를 찾아보세요. \n상대방이 좋아할 디자인을 \n고르는 재미도 느껴보세요.",
+    "completedCount": 0,
+    "action": "find_couple_tshirt"
+  },
+  {
+    "title": "첫만남 4컷만화 그리기",
+    "environment": 3,
+    "locationTag": ["집"],
+    "detail": "그린판을 준비하고 서로의 \n첫 만남을 주제로 4컷 만화를 \n그려보세요. 각자 그림을 \n비교하며 추억을 나눠보세요.",
+    "completedCount": 0,
+    "action": "draw_comic"
+  },
+  {
+    "title": "빨대와 포크로 가까워지기",
+    "environment": 2,
+    "locationTag": ["카페"],
+    "detail": "빨대 하나로 음료를 나눠 마시고 \n포크 하나로 음식을 먹으며 \n서로의 협동심을 확인해보세요.",
+    "completedCount": 0,
+    "action": "share_utensils"
+  },
+  {
+    "title": "닮은꼴 눈사람 조각 도전",
+    "environment": 4,
+    "locationTag": ["공원"],
+    "detail": "공원에서 서로를 닮은 얼굴을 가진 \n눈사람을 만들어보세요. \n조각에 집중하며 추운 날도 \n따뜻하게 보내보세요.",
+    "completedCount": 0,
+    "action": "make_snowman"
+  },
+  {
+    "title": "서로의 사진으로 배경화면 설정",
+    "environment": 2,
+    "locationTag": ["집"],
+    "detail": "일주일 동안 서로의 사진을 \n휴대폰 배경화면으로 설정하고 \n매일 확인하며 웃음을 나눠보세요.",
+    "completedCount": 0,
+    "action": "set_wallpaper"
+  },
+  {
+    "title": "함께 반려식물 키우기",
     "environment": 5,
-    "locationTag": ["도서관", "공부"],
-    "detail": "2",
+    "locationTag": ["집"],
+    "detail": "작은 반려식물을 함께 키우며 \n물을 주고 성장하는 모습을 \n서로 공유해보세요.",
     "completedCount": 0,
-    "action": "library_action"
+    "action": "grow_plant"
   },
   {
-    "title": "3",
-    "environment": 0,
-    "locationTag": ["공원", "자연"],
-    "detail": "1234",
+    "title": "야외극장 느낌으로 영화 보기",
+    "environment": 4,
+    "locationTag": ["집"],
+    "detail": "난방을 끄고 담요를 둘러싸며 \nOTT나 영화를 감상해보세요. \n야외극장의 느낌을 집에서 \n느껴보는 특별한 시간을 가져요.",
     "completedCount": 0,
-    "action": "walk_action"
+    "action": "watch_movie"
   },
   {
-    "title": "1234",
-    "environment": 0,
-    "locationTag": ["공원", "자연"],
-    "detail": "1234",
+    "title": "요리와 소풍의 완벽 조합",
+    "environment": 3,
+    "locationTag": ["야외"],
+    "detail": "유튜브 영상을 보고 음식을 만들고 \n소풍 가서 함께 맛있게 \n나눠 먹는 하루를 만들어보세요.",
     "completedCount": 0,
-    "action": "walk_action"
+    "action": "cook_and_picnic"
+  },
+  {
+    "title": "어린 시절로 돌아가는 시간",
+    "environment": 2,
+    "locationTag": ["놀이터"],
+    "detail": "동네 놀이터에서 어린 시절 즐기던 \n놀이들을 다시 해보세요. \n순수했던 시절의 추억을 \n함께 떠올려보세요.",
+    "completedCount": 0,
+    "action": "childhood_play"
+  },
+  {
+    "title": "재래시장 데이트",
+    "environment": 3,
+    "locationTag": ["시장"],
+    "detail": "재래시장을 돌아다니며 함께 먹고 \n쇼핑하며 시장의 매력을 \n느껴보세요.",
+    "completedCount": 0,
+    "action": "market_date"
+  },
+  {
+    "title": "종이접기로 집안 꾸미기",
+    "environment": 4,
+    "locationTag": ["집"],
+    "detail": "종이접기로 꽃이나 반지를 만들어 \n집안을 꾸미는 소품으로 사용하며 \n함께 창의력을 발휘해보세요.",
+    "completedCount": 0,
+    "action": "origami_decor"
+  },
+  {
+    "title": "도서관 데이트",
+    "environment": 2,
+    "locationTag": ["도서관"],
+    "detail": "조용한 도서관에서 함께 공부하며 \n서로의 목표를 응원하고 \n집중력을 높여보세요.",
+    "completedCount": 0,
+    "action": "study_together"
+  },
+  {
+    "title": "미술관에서 감성 충전",
+    "environment": 3,
+    "locationTag": ["미술관"],
+    "detail": "미술관을 방문해 다양한 작품을 \n보며 서로의 생각을 나누고 \n감성을 충전하는 시간을 가져요.",
+    "completedCount": 0,
+    "action": "visit_museum"
+  },
+  {
+    "title": "따뜻한 코코아 타임",
+    "environment": 3,
+    "locationTag": ["카페"],
+    "detail": "따뜻한 코코아를 마시며 \n서로의 이야기를 나누고 \n포근한 분위기를 만들어보세요.",
+    "completedCount": 0,
+    "action": "drink_cocoa"
+  },
+  {
+    "title": "환경을 노래로 즐기기",
+    "environment": 5,
+    "locationTag": ["집"],
+    "detail": "환경 관련 단어가 들어간 노래를 \n찾아 완창하며 함께 웃고 \n즐거운 시간을 보내세요.",
+    "completedCount": 0,
+    "action": "sing_environment_song"
+  },
+  {
+    "title": "편지로 마음 전하기",
+    "environment": 3,
+    "locationTag": ["집"],
+    "detail": "서로에게 짧은 손편지를 써보세요. \n직접 손으로 쓰는 글씨로 \n진심을 전하며 추억을 만들어보세요.",
+    "completedCount": 0,
+    "action": "write_letter"
+  },
+  {
+    "title": "밤하늘 별자리 관찰",
+    "environment": 4,
+    "locationTag": ["야외"],
+    "detail": "밤하늘을 보며 별자리를 찾아보고 \n서로의 이야기를 나누는 시간을 \n가져보세요. 함께 누워 하늘을 \n바라보는 것도 좋습니다.",
+    "completedCount": 0,
+    "action": "stargazing"
+  },
+  {
+    "title": "직접 만든 핫초코 나눠 마시기",
+    "environment": 3,
+    "locationTag": ["집"],
+    "detail": "핫초코를 함께 만들어 보세요. \n마시며 서로의 취향에 대해 \n이야기를 나누고 따뜻한 시간을 \n보내보세요.",
+    "completedCount": 0,
+    "action": "make_hot_chocolate"
+  },
+  {
+    "title": "공원에서 그림 그리기",
+    "environment": 4,
+    "locationTag": ["공원"],
+    "detail": "공원의 풍경이나 서로를 주제로 \n그림을 그려보세요. 실력이 없어도 \n웃으며 즐거운 추억을 남길 수 \n있습니다.",
+    "completedCount": 0,
+    "action": "paint_outdoor"
+  },
+  {
+    "title": "전통놀이로 데이트하기",
+    "environment": 3,
+    "locationTag": ["야외"],
+    "detail": "전통놀이인 윷놀이, 제기차기 등을 \n준비해서 서로 대결하며 즐거운 \n시간을 보내보세요. 어린 시절의 \n추억을 떠올리게 될 거예요.",
+    "completedCount": 0,
+    "action": "play_traditional_games"
+  },
+  {
+    "title": "거리에서 즉흥 춤 도전",
+    "environment": 2,
+    "locationTag": ["도심"],
+    "detail": "길거리에서 음악을 틀고 즉흥으로 \n춤을 춰보세요. 부끄럽지만 새로운 \n추억을 만들기에 완벽한 미션입니다.",
+    "completedCount": 0,
+    "action": "dance_outdoor"
+  },
+  {
+    "title": "책 없이 즉석에서 동화 만들기",
+    "environment": 2,
+    "locationTag": ["집"],
+    "detail": "즉석에서 동화를 만들어보세요. \n서로 번갈아 가며 이야기를 \n완성해 가는 과정이 재미있을 거예요.",
+    "completedCount": 0,
+    "action": "create_story"
+  },
+  {
+    "title": "옷장 속 옷으로 커플 의상 코디",
+    "environment": 3,
+    "locationTag": ["집"],
+    "detail": "서로의 옷장에서 옷을 골라 \n커플 의상을 만들어보세요. \n완성 후 패션쇼도 열어보세요!",
+    "completedCount": 0,
+    "action": "style_couple_outfit"
+  },
+  {
+    "title": "자전거 타고 도시 탐험",
+    "environment": 4,
+    "locationTag": ["도시"],
+    "detail": "자전거를 타고 도시 곳곳을 \n탐험하며 숨겨진 장소를 \n찾아보세요. 교통수단 대신 \n자전거를 사용해 탄소를 줄여요.",
+    "completedCount": 0,
+    "action": "bike_explore"
+  },
+  {
+    "title": "환경 테마로 보드게임 즐기기",
+    "environment": 3,
+    "locationTag": ["집"],
+    "detail": "환경 보호를 주제로 한 \n보드게임을 즐기며 \n새로운 아이디어를 \n공유해보세요.",
+    "completedCount": 0,
+    "action": "play_boardgame"
+  },
+  {
+    "title": "태양광 랜턴 캠핑",
+    "environment": 5,
+    "locationTag": ["야외"],
+    "detail": "태양광 랜턴을 준비해 \n캠핑을 즐기며 전기를 \n절약하고 자연을 가까이에서 \n느껴보세요.",
+    "completedCount": 0,
+    "action": "solar_camping"
+  },
+  {
+    "title": "로컬 시장에서 재료 구입 후 요리하기",
+    "environment": 4,
+    "locationTag": ["시장"],
+    "detail": "로컬 시장에서 신선한 재료를 \n구입하고 함께 요리하며 \n지역 경제를 응원하고 \n탄소발자국을 줄여보세요.",
+    "completedCount": 0,
+    "action": "local_market_cooking"
+  },
+  {
+    "title": "도심 속 미니 식물원 방문",
+    "environment": 3,
+    "locationTag": ["도시"],
+    "detail": "도심 속 작은 식물원을 찾아 \n다양한 식물을 감상하며 \n자연과의 연결을 느껴보세요. \n추억 사진도 남겨보세요.",
+    "completedCount": 0,
+    "action": "visit_plant_garden"
   }
 ]
+
+

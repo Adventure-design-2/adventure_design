@@ -6,13 +6,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,13 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.myadventure.R
 import com.example.myadventure.model.ChatMessage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.getValue
 import com.google.firebase.storage.FirebaseStorage
 
 @Composable
@@ -38,9 +47,13 @@ fun ChatRoomScreen(
     val database = FirebaseDatabase.getInstance().reference
     val storage = FirebaseStorage.getInstance().reference
     val messages = remember { mutableStateListOf<ChatMessage>() }
+    val imageUrls = remember { mutableStateListOf<String>() }
     var inputMessage by remember { mutableStateOf("") }
     var missionTitle by remember { mutableStateOf("Loading...") }
     var currentUser by remember { mutableStateOf("") }
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) } // 확대된 이미지 URL
+
+    val context = LocalContext.current
 
     // 현재 사용자 ID 가져오기
     LaunchedEffect(Unit) {
@@ -54,12 +67,10 @@ fun ChatRoomScreen(
         roomRef.child("mission").get().addOnSuccessListener { snapshot ->
             val mission = snapshot.child("title").getValue(String::class.java)
             missionTitle = mission ?: "미션 제목 없음"
-        }.addOnFailureListener {
-            missionTitle = "미션 제목 로드 실패"
         }
     }
 
-    // 메시지 로드
+    // 메시지 및 이미지 갤러리 로드
     LaunchedEffect(roomId) {
         val chatRef = database.child("chatRooms").child(roomId).child("messages")
         chatRef.addChildEventListener(object : ChildEventListener {
@@ -67,6 +78,7 @@ fun ChatRoomScreen(
                 val message = snapshot.getValue(ChatMessage::class.java)
                 if (message != null) {
                     messages.add(message)
+                    message.imageUrl?.let { imageUrls.add(it) }
                 }
             }
 
@@ -77,7 +89,6 @@ fun ChatRoomScreen(
         })
     }
 
-    val context = LocalContext.current
     // 이미지 선택 런처
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -94,23 +105,12 @@ fun ChatRoomScreen(
                             imageUrl = downloadUri.toString()
                         )
 
-                        // Firebase에 새 메시지 추가
+                        // Firebase에 메시지 저장
                         database.child("chatRooms")
                             .child(roomId)
                             .child("messages")
                             .child(newMessage.id)
                             .setValue(newMessage)
-                        // 기존 imageUrl 리스트를 가져와 업데이트
-                        val chatRoomRef = database.child("chatRooms").child(roomId)
-                        chatRoomRef.child("imageUrl").get().addOnSuccessListener { snapshot ->
-                            val existingImageUrls = snapshot.getValue<List<String>>() ?: emptyList()
-                            val updatedImageUrls = existingImageUrls + downloadUri.toString()
-
-                            // 업데이트된 imageUrl 리스트를 Firebase에 저장
-                            chatRoomRef.child("imageUrl").setValue(updatedImageUrls)
-                        }.addOnFailureListener {
-                            Toast.makeText(context, "이미지 URL 업데이트 실패", Toast.LENGTH_SHORT).show()
-                        }
                     }
                 }.addOnFailureListener {
                     Toast.makeText(context, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
@@ -119,40 +119,58 @@ fun ChatRoomScreen(
         }
     )
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFFFF5F8)) // 전체 배경색
             .padding(16.dp)
     ) {
         // 상단 바
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // 미션 제목 가운데 정렬
             Text(
                 text = missionTitle,
                 fontSize = 20.sp,
                 color = Color.Black,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .wrapContentHeight(align = Alignment.CenterVertically),
+                modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
-            // 미션 완료 버튼
             Button(
                 onClick = {
-                    navController.navigate("diary_screen") {
-                        popUpTo("chat_room_screen/$roomId") { inclusive = false }
-                    }
+                    navController.navigate("diary_screen")
                 },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.size(80.dp, 36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC6D3))
             ) {
-                Text(text = "미션 완료")
+                Text(text = "저장!", fontSize = 12.sp)
+            }
+        }
+
+        // 이미지 갤러리
+        if (imageUrls.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(imageUrls) { imageUrl ->
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUrl),
+                        contentDescription = "Chat Image",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .background(Color.White)
+                            .clickable { selectedImageUrl = imageUrl } // 이미지 클릭 시 확대
+                    )
+                }
             }
         }
 
@@ -162,6 +180,7 @@ fun ChatRoomScreen(
             contentPadding = PaddingValues(8.dp)
         ) {
             items(messages) { message ->
+                // 메시지 텍스트만 표시
                 val isCurrentUser = message.senderId == currentUser
 
                 Row(
@@ -173,24 +192,12 @@ fun ChatRoomScreen(
                     Column(
                         modifier = Modifier
                             .background(
-                                color = if (isCurrentUser) Color(0xFFDFFFD6) else Color(0xFFF0F0F0),
+                                color = if (isCurrentUser) Color(0xFFFFC6D3) else Color(0xFFFCE4EC),
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                             )
                             .padding(8.dp)
                     ) {
-                        Text(
-                            text = message.message,
-                            color = if (isCurrentUser) Color.Black else Color.DarkGray
-                        )
-                        message.imageUrl?.let { imageUrl ->
-                            Image(
-                                painter = rememberAsyncImagePainter(imageUrl),
-                                contentDescription = "Image",
-                                modifier = Modifier
-                                    .size(150.dp)
-                                    .padding(top = 4.dp)
-                            )
-                        }
+                        Text(text = message.message, color = if (isCurrentUser) Color.White else Color.Black)
                     }
                 }
             }
@@ -200,73 +207,78 @@ fun ChatRoomScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(8.dp)
+                .background(Color(0xFFFCE4EC), androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 입력창
             BasicTextField(
                 value = inputMessage,
                 onValueChange = { inputMessage = it },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp)
-                    .height(48.dp), // 입력창 높이 조정
+                    .padding(start = 8.dp),
                 decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFFF6F6F6), androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        if (inputMessage.isEmpty()) {
-                            Text(text = "메시지를 입력하세요...", color = Color.Gray)
-                        }
-                        innerTextField()
+                    if (inputMessage.isEmpty()) {
+                        Text(text = "메시지를 입력하세요...", color = Color.Gray)
                     }
+                    innerTextField()
                 }
             )
 
-            // 전송 및 이미지 버튼
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            // 전송 버튼
+            Button(
+                onClick = {
+                    if (inputMessage.isNotBlank()) {
+                        val newMessage = ChatMessage(
+                            id = database.push().key ?: "",
+                            senderId = currentUser,
+                            message = inputMessage
+                        )
+                        database.child("chatRooms").child(roomId).child("messages")
+                            .child(newMessage.id).setValue(newMessage)
+                        inputMessage = "" // 입력 필드 초기화
+                    }
+                },
+                modifier = Modifier.size(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Button(
-                    onClick = {
-                        if (inputMessage.isNotBlank()) {
-                            val newMessage = ChatMessage(
-                                id = database.push().key ?: "",
-                                senderId = currentUser,
-                                message = inputMessage
-                            )
+                Image(
+                    painter = rememberAsyncImagePainter(model = R.drawable.baseline_send_24),
+                    contentDescription = "Send Icon"
+                )
+            }
 
-                            // Firebase에 메시지 추가
-                            database.child("chatRooms")
-                                .child(roomId)
-                                .child("messages")
-                                .child(newMessage.id)
-                                .setValue(newMessage)
-
-                            inputMessage = "" // 입력 필드 초기화
-                        }
-                    },
-                    modifier = Modifier.size(64.dp, 32.dp) // 버튼 크기 조정
-                ) {
-                    Text("전송", fontSize = 12.sp)
-                }
-
-                Button(
-                    onClick = { imagePickerLauncher.launch("image/*") },
-                    modifier = Modifier.size(64.dp, 32.dp) // 버튼 크기 조정
-                ) {
-                    Text("이미지", fontSize = 12.sp)
-                }
+            // 이미지 버튼
+            Button(
+                onClick = { imagePickerLauncher.launch("image/*") },
+                modifier = Modifier.size(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = R.drawable.baseline_image_24),
+                    contentDescription = "Image Icon"
+                )
             }
         }
     }
+
+    // 확대된 이미지 보기
+    selectedImageUrl?.let { imageUrl ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.8f))
+                .clickable { selectedImageUrl = null }, // 클릭 시 닫기
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(imageUrl),
+                contentDescription = "Expanded Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+        }
+    }
 }
-
-
-
-
 

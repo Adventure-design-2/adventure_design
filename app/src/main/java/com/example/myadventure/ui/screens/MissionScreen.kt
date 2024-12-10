@@ -1,6 +1,7 @@
 package com.example.myadventure.ui.screens
 
 import DDayDataStore
+import android.annotation.SuppressLint
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -17,9 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -58,6 +59,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun MissionScreen(
     navController: NavHostController,
@@ -76,7 +78,6 @@ fun MissionScreen(
     var dDayResult by remember { mutableStateOf("Loading...") }
     // 이미지 전환을 위한 상태
     var currentImage by remember { mutableIntStateOf(R.drawable.mission_char) }
-    var isLoading by remember { mutableStateOf(true) }
     val dDayDataStore = remember { DDayDataStore() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -151,24 +152,10 @@ fun MissionScreen(
 
                     // 사용자와 상대방 이름 표시
                     Text(
-                        text = "$myName & $partnerName\n $dDayResult ❤\n\n",
+                        text = "$myName ❤ $partnerName\n $dDayResult ❤\n\n",
                         style = MaterialTheme.typography.headlineSmall
                     )
 
-                    // 상대방이 생성한 채팅방으로 이동 버튼
-                    newlyCreatedChatRoomId?.let { roomId ->
-                        Button(
-                            onClick = {
-                                navController.navigate("chat_room_screen/$roomId") {
-                                    popUpTo("mission_screen") { inclusive = true }
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("새로운 채팅방으로 이동")
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
 
                     // 미션 선택 카드
                     MissionSelectionCard(
@@ -178,18 +165,33 @@ fun MissionScreen(
                             showSelectDialog = true
                         }
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // 화면 오른쪽 아래에서 1초 간격으로 전환되는 캐릭터 이미지
+                        Image(
+                            painter = painterResource(id = currentImage),
+                            contentDescription = "Mission Character",
+                            modifier = Modifier
+                                .size(170.dp) // 캐릭터 크기 조절
+                                .align(Alignment.Bottom)
+                        )
+
+                        // 상대방이 생성한 채팅방으로 이동 버튼
+                        newlyCreatedChatRoomId?.let { roomId ->
+                            Spacer(modifier = Modifier.width(16.dp)) // 이미지와 버튼 간 간격
+                            ChatRoomNavigationCard(
+                                roomId = roomId,
+                                navController = navController // NavController 전달
+                            )
+                        }
+                    }
+
                 }
-
-                // 화면 오른쪽 아래에서 1초 간격으로 전환되는 캐릭터 이미지
-                Image(
-                    painter = painterResource(id = currentImage),
-                    contentDescription = "Mission Character",
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                        .size(170.dp) // 캐릭터 크기 조절
-                )
-
                 // 미션 선택 확인 Dialog
                 if (showSelectDialog) {
                     AlertDialog(
@@ -269,9 +271,14 @@ fun MissionScreen(
                                         WebView(context).apply {
                                             webViewClient = WebViewClient()
                                             settings.javaScriptEnabled = true
-                                            val locationQuery = selectedMission?.locationTag ?: "서울"
+
+                                            // 랜덤한 locationTag 값을 선택
+                                            val randomLocationQuery = selectedMission?.locationTag?.randomOrNull() ?: "서울"
+
+                                            // 네이버 지도 URL 생성
                                             val naverMapUrl =
-                                                "https://m.map.naver.com/search2/search.naver?query=$locationQuery&sm=hty&style=v5#/map/1"
+                                                "https://m.map.naver.com/search2/search.naver?query=$randomLocationQuery&sm=hty&style=v5#/map/1"
+
                                             loadUrl(naverMapUrl)
                                         }
                                     },
@@ -279,6 +286,7 @@ fun MissionScreen(
                                         .fillMaxWidth()
                                         .height(600.dp)
                                 )
+
                             }
                         },
                         confirmButton = {
@@ -289,7 +297,7 @@ fun MissionScreen(
                                     }
                                     showSecondDialog = false
                                 }) {
-                                    Text("채팅방으로 이동")
+                                    Text("추억 기록하기")
                                 }
                             }
                         }
@@ -300,6 +308,40 @@ fun MissionScreen(
     )
 }
 
+
+@Composable
+fun ChatRoomNavigationCard(
+    roomId: String,
+    navController: NavHostController // NavController 추가
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .clickable {
+                navController.navigate("chat_room_screen/$roomId") // roomId를 통해 이동
+            },
+        colors = CardDefaults.cardColors(containerColor = Color(0x59CFC3CE)),
+        shape = RoundedCornerShape(6.dp),
+        elevation = CardDefaults.cardElevation(0.0001.dp),
+        border = BorderStroke(1.dp, Color(0xFFCFC3CE))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "추억 기록하러 가기",
+                fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.4f,
+                color = Color(0xFF6D4C41),
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
 
 
 

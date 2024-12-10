@@ -11,6 +11,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.Coil
+import coil.ImageLoader
+import coil.request.CachePolicy
 import com.example.myadventure.data.MissionRepository
 import com.example.myadventure.ui.screens.ChatRoomListScreen
 import com.example.myadventure.ui.screens.ChatRoomScreen
@@ -30,6 +33,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val imageLoader = ImageLoader.Builder(this)
+            .crossfade(true)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build()
+        Coil.setImageLoader(imageLoader)
 
         setContent {
             val navController: NavHostController = rememberNavController()
